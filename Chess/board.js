@@ -3,18 +3,73 @@ const startFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 class Board {
     constructor() {
         this.board = [];
-        // this.board[0] = new King(63, "White");
-        // this.board[1] = new Queen(60, "White");
-        // this.board[2] = new Bishop(10, "White");
-        // this.board[3] = new Knight(12, "White");
-        // this.board[4] = new Rook(25, "White");
-        // this.board[5] = new Pawn(19, "White");
-        // this.board[6] = new King(15, "Black");
-        // this.board[7] = new Queen(30, "Black");
-        // this.board[8] = new Bishop(43, "Black");
-        // this.board[9] = new Knight(53, "Black");
-        // this.board[10] = new Rook(46, "Black");
-        // this.board[11] = new Pawn(32, "Black");
+    }
+
+    range(start, end) {
+        var ans = [];
+        for (let i = start; i <= end; i++) {
+            ans.push(i);
+        }
+        return ans;
+    }
+
+    getXPos(tile) {
+        if (board[tile] != null) {
+            return this.range(board[tile].xPos, board[tile].xPos + board[tile].width);
+        } else {
+            var start = tile % 8 * tileWidth
+            return this.range(start, start + tileWidth)
+        }
+        
+    }
+
+    getYPos(tile) {
+        if (board[tile] != null) {
+            return this.range(board[tile].yPos, board[tile].yPos + board[tile].height);
+        } else {
+            var start = parseInt(tile / 8, 10) * tileHeight;
+            return this.range(start, start + tileWidth);
+        }
+        
+    }
+
+    changeColor(tile, piece) {
+        var whiteTiles = Piece.getColorTiles();
+        if (whiteTiles.includes(tile)){
+            ctx.fillStyle = 'rgba(221,136,44,255)';
+        }
+        else {
+            ctx.fillStyle = "rgba(137,43,0,255)";
+        }
+        ctx.fillRect(piece.xPos, piece.yPos, tileWidth, tileHeight);
+    }
+
+    clickPiece(xPos, yPos) {
+        for (let x = 0; x < this.board.length; x++) {
+            if (this.board[x] != null) {
+                if (this.getXPos(x).includes(xPos) && this.getYPos(x).includes(yPos)) {
+                    var piece = this.board[x];
+                    this.changeColor(x, piece);
+                    piece.show();
+                    this.board[x] = null;
+                    return piece;
+                } 
+            }
+        }
+        return null;
+    }
+
+    movePiece(selectedPiece, xPos, yPos) {
+        for (let x = 0; x < this.board.length; x++) {
+            if (this.getXPos(x).includes(xPos) && this.getYPos(x).includes(yPos)) {
+                selectedPiece.deletePiece(selectedPiece.tile);
+                selectedPiece.setTile(x);
+                selectedPiece.deletePiece(x);
+                selectedPiece.show();
+                this.board[x] = selectedPiece;
+                break;
+            }
+        }  
     }
 
     loadFenString(fen) {
@@ -66,7 +121,3 @@ class Board {
     }
 }
 
-let board = new Board();
-// board.loadFenString("k");
-// board.createBoard("7k/3N2qp/b5r1/2p1Q1N1/Pp4PK/7P/1P3p2/6r1");
-board.createBoard("r1b1k1nr/p2p1pNp/n2B4/1p1NP2P/6P1/3P1Q2/P1P1K3/q5b1.");

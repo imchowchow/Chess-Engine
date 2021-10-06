@@ -20,14 +20,3 @@ function drawBoard() {
         }
     }
 }
-
-
-// ctx.drawImage("White king.png", 100, 100);
-
-// const image = document.getElementById('source');
-
-// image.addEventListener('load', e => {
-//     ctx.drawImage(image, 50, 50);
-// });
-
-drawBoard();
