@@ -6,6 +6,46 @@ class Piece {
 
         this.xPos = tile % 8 * tileWidth;
         this.yPos = parseInt(tile / 8, 10) * tileHeight; // cast double to int
+        this.width = tileWidth;
+        this.height = tileHeight;
+    }
+
+    setTile(tile) {
+        this.tile = tile;
+        this.xPos = tile % 8 * tileWidth;
+        this.yPos = parseInt(tile / 8, 10) * tileHeight;
+    }
+
+    static getColorTiles() {
+        var out = [];
+        var ahh = true; // cant think of name its switches every row
+        for (let x = 0; x < 64; x++) {
+            if (ahh) {
+                if (x % 2 == 0) {
+                    out.push(x);
+                } 
+            } else{
+                if (x % 2 != 0) {
+                    out.push(x);
+                }
+            }
+
+            if ((x + 1) % 8 == 0) {
+                ahh = !ahh;
+            }
+        }
+        return out;
+    }
+    
+    deletePiece(tile) {
+        var whiteTiles = Piece.getColorTiles();
+        if (whiteTiles.includes(tile)){
+            ctx.fillStyle = 'rgba(222,185,145,255)';
+        }
+        else {
+            ctx.fillStyle = "rgba(138,73,42,255)";
+        }
+        ctx.fillRect(this.xPos, this.yPos, tileWidth, tileHeight);
     }
 }
 
@@ -13,6 +53,7 @@ class King extends Piece {
     constructor(tile, color) {
         super(tile, color);
         this.piece = "K";
+        this.pic = "Assets/White King.png";
         this.value = 99;
     }
 
