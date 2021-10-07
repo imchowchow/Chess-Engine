@@ -4,16 +4,21 @@ class Piece {
         this.color = color;
         this.piece = piece;
 
-        this.xPos = tile % 8 * tileWidth;
-        this.yPos = parseInt(tile / 8, 10) * tileHeight; // cast double to int
+
+        this.file = parseInt(tile / 8, 10); // y
+        this.rank = tile % 8; // x
+        this.xPos = this.rank * tileWidth;
+        this.yPos = this.file * tileHeight; 
         this.width = tileWidth;
         this.height = tileHeight;
     }
 
     setTile(tile) {
         this.tile = tile;
-        this.xPos = tile % 8 * tileWidth;
-        this.yPos = parseInt(tile / 8, 10) * tileHeight;
+        this.file = parseInt(tile / 8, 10);
+        this.rank = tile % 8;
+        this.xPos = this.rank * tileWidth;
+        this.yPos = this.file * tileHeight; 
     }
 
     static getColorTiles() {
@@ -46,6 +51,12 @@ class Piece {
             ctx.fillStyle = "rgba(138,73,42,255)";
         }
         ctx.fillRect(this.xPos, this.yPos, tileWidth, tileHeight);
+    }
+
+    generateMoves(piece) {
+        var moves = [];
+
+        return moves;
     }
 }
 
@@ -117,6 +128,34 @@ class Rook extends Piece {
         const pic = document.getElementById(this.color + ' Rook');
         ctx.drawImage(pic, this.xPos - 133, this.yPos - 61, canvas.width / 2.13, canvas.height / 3.42); // x and y weird cuz canvas
 
+    }
+
+    moves(board) {
+        var moves = [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+        ];
+        for (var file = 0; file < 8; file++) {
+            for (var rank = 0; rank < 8; rank++) {
+                if (rank == this.rank || file == this.file) {
+                    if (board.board[file][rank] == null) {
+                        moves[file][rank] = 1;
+                    } else {
+                        moves[file][rank] = 0;
+                    }
+                } else {
+                    moves[file][rank] = 0;
+
+                }
+            }
+        }
+        console.log(moves);
     }
 }
 
