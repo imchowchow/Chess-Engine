@@ -11,6 +11,18 @@ class Piece {
         this.yPos = this.file * tileHeight; 
         this.width = tileWidth;
         this.height = tileHeight;
+
+
+        this.moveLst = [
+            [0, 0, 0, 0, 0, 0, 0, 0], // put zeros so its easier to debug
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0]
+        ];
     }
 
     setTile(tile) {
@@ -23,9 +35,9 @@ class Piece {
 
     static getColorTiles() {
         var out = [];
-        var ahh = true; // cant think of name its switches every row
+        var swtch = true;
         for (let x = 0; x < 64; x++) {
-            if (ahh) {
+            if (swtch) {
                 if (x % 2 == 0) {
                     out.push(x);
                 } 
@@ -36,13 +48,13 @@ class Piece {
             }
 
             if ((x + 1) % 8 == 0) {
-                ahh = !ahh;
+                swtch = !swtch;
             }
         }
         return out;
     }
     
-    deletePiece(tile) {
+    deletePiece(tile) { // draws over piece
         var whiteTiles = Piece.getColorTiles();
         if (whiteTiles.includes(tile)){
             ctx.fillStyle = 'rgba(222,185,145,255)';
@@ -53,10 +65,25 @@ class Piece {
         ctx.fillRect(this.xPos, this.yPos, tileWidth, tileHeight);
     }
 
-    generateMoves(piece) {
-        var moves = [];
-
-        return moves;
+    addHorizontalMoves(board, tile, increase, edge) {
+        let step = (increase > 0) ? tile : tile * -1;
+        while (step <= edge) {
+            let file = parseInt(Math.abs(step) / 8, 10);
+            let rank = Math.abs(step) % 8;
+            if (board.board[file][rank] === this) {
+                this.moveLst[file][rank] = 1;
+            } else if (board.board[file][rank] == null) {
+                this.moveLst[file][rank] = 1;
+            } else if (board.board[file][rank].color != this.color) {
+                this.moveLst[file][rank] = 1;
+                break;
+            } else if (board.board[file][rank].color == this.color) {
+                break;
+            } else {
+                this.moveLst[file][rank] = 0;
+            }
+            step += Math.abs(increase);
+        }
     }
 }
 
@@ -122,6 +149,7 @@ class Rook extends Piece {
         super(tile, color);
         this.piece = "R";
         this.value = 5;
+        
     }
 
     show() {
@@ -130,32 +158,32 @@ class Rook extends Piece {
 
     }
 
-    moves(board) {
-        var moves = [
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            []
-        ];
-        for (var file = 0; file < 8; file++) {
-            for (var rank = 0; rank < 8; rank++) {
-                if (rank == this.rank || file == this.file) {
-                    if (board.board[file][rank] == null) {
-                        moves[file][rank] = 1;
-                    } else {
-                        moves[file][rank] = 0;
-                    }
-                } else {
-                    moves[file][rank] = 0;
+    showMoves(board) {
+        this.moves(board);
+        board.changeColor()
+    }
 
-                }
-            }
-        }
-        console.log(moves);
+    moves(board) {
+        this.moveLst = [ 
+            [0, 0, 0, 0, 0, 0, 0, 0], 
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0]
+        ];
+
+        let southEdge = ((totRows - this.file) * 8) + this.tile; // the end of the board for a direction from a specific square
+        let northEdge = (this.tile % (8 * this.file)) * -1;
+        let eastEdge = this.tile + (totRows - this.rank);
+        let westEdge = (this.tile - this.rank) * -1;
+
+        this.addHorizontalMoves(board, this.tile, 1, eastEdge);
+        this.addHorizontalMoves(board, this.tile, -1, westEdge);
+        this.addHorizontalMoves(board, this.tile, 8, southEdge);
+        this.addHorizontalMoves(board, this.tile, -8, northEdge);
     }
 }
 

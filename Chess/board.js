@@ -22,18 +22,17 @@ class Board {
         return ans;
     }
 
-    getXPos(file, rank) {
+    getXPositions(file, rank) { // returns a range of x values of a tile
         var piece = this.board[file][rank];
         if (piece != null) {
             return this.range(piece.xPos, piece.xPos + piece.width);
         } else {
-            var start = rank * tileWidth
+            var start = rank * tileWidth;
             return this.range(start, start + tileWidth)
         }
-        
     }
 
-    getYPos(file, rank) {
+    getYPositions(file, rank) { // returns a range of y values of a tile
         var piece = this.board[file][rank];
         if (piece != null) {
             return this.range(piece.yPos, piece.yPos + piece.height);
@@ -41,10 +40,9 @@ class Board {
             var start = file * tileHeight;
             return this.range(start, start + tileWidth);
         }
-        
     }
 
-    changeColor(tile, piece) {
+    changeColor(tile, piece) { // for when piece is selected
         var whiteTiles = Piece.getColorTiles();
         if (whiteTiles.includes(tile)){
             ctx.fillStyle = 'rgba(221,136,44,255)';
@@ -61,8 +59,10 @@ class Board {
             var file = parseInt(x / 8, 10);
             var rank = x % 8;
             if (this.board[file][rank] != null) {
-                if (this.getXPos(file, rank).includes(xPos) && this.getYPos(file, rank).includes(yPos) && this.board[file][rank].color == color) {
+                if (this.getXPositions(file, rank).includes(xPos) && this.getYPositions(file, rank).includes(yPos) && this.board[file][rank].color == color) {
                     var piece = this.board[file][rank];
+                    piece.moves(this);
+                    console.log(piece.moveLst);
                     this.changeColor(x, piece);
                     piece.show();
                     this.board[file][rank] = null;
@@ -77,12 +77,12 @@ class Board {
         for (let x = 0; x < 64; x++) {
             var file = parseInt(x / 8, 10);
             var rank = x % 8;
-            if (this.getXPos(file, rank).includes(xPos) && this.getYPos(file, rank).includes(yPos)) {
+            if ((this.getXPositions(file, rank).includes(xPos) && this.getYPositions(file, rank).includes(yPos)) && selectedPiece.moveLst[file][rank] == 1) { //  
                 if (selectedPiece.tile == x) {
                     selectedPiece.deletePiece(selectedPiece.tile);
                     this.board[file][rank] = selectedPiece;
                     selectedPiece.show();
-                    return null;
+                    return 1;
                 }
                 selectedPiece.deletePiece(selectedPiece.tile);
                 selectedPiece.setTile(x);
