@@ -3,13 +3,14 @@ class Piece {
         this.tile = tile;
         this.color = color;
         this.piece = piece;
+        this.timesMoved = 0;
 
 
         this.file = parseInt(tile / 8, 10); // y
         this.rank = tile % 8; // x
         this.xPos = this.rank * tileWidth;
         this.yPos = this.file * tileHeight;
-        
+
         this.width = tileWidth;
         this.height = tileHeight;
 
@@ -34,7 +35,7 @@ class Piece {
         this.file = parseInt(tile / 8, 10);
         this.rank = tile % 8;
         this.xPos = this.rank * tileWidth;
-        this.yPos = this.file * tileHeight; 
+        this.yPos = this.file * tileHeight;
     }
 
     static getColorTiles() {
@@ -44,8 +45,8 @@ class Piece {
             if (swtch) {
                 if (x % 2 == 0) {
                     out.push(x);
-                } 
-            } else{
+                }
+            } else {
                 if (x % 2 != 0) {
                     out.push(x);
                 }
@@ -57,10 +58,10 @@ class Piece {
         }
         return out;
     }
-    
+
     deletePiece(tile) { // draws over piece
         var whiteTiles = Piece.getColorTiles();
-        if (whiteTiles.includes(tile)){
+        if (whiteTiles.includes(tile)) {
             ctx.fillStyle = 'rgba(222,185,145,255)';
         }
         else {
@@ -117,18 +118,17 @@ class Piece {
     checkMoves(board, lst) {
         for (let x = 0; x < lst.length; x++) {
             let newTile = this.tile + lst[x];
-            if (newTile > 63 || newTile < 0) {
-                continue;
-            }
             let file = parseInt(Math.abs(newTile) / 8, 10);
             let rank = Math.abs(newTile) % 8;
+            if (newTile > 63 || newTile < 0 || Math.abs(this.rank - rank) > 2) { // last check so it doesnt wrap around ranks
+                continue;
+            }
             if (board.board[file][rank] === this) {
                 this.moveLst[file][rank] = 1;
             } else if (board.board[file][rank] == null) {
                 this.moveLst[file][rank] = 1;
             } else if (board.board[file][rank].color != this.color) {
                 this.moveLst[file][rank] = 1;
-                continue;
             } else if (board.board[file][rank].color == this.color) {
                 continue;
             } else {
@@ -144,6 +144,10 @@ class King extends Piece {
         this.piece = "K";
         this.pic = "Assets/White King.png";
         this.value = 99;
+
+        this.check = false;
+        this.whichRook; // im a bad programmer idk how else to decide which rook moves in a castle
+        // this is my fix it will just send the index of which rook is moving
     }
 
     show() {
@@ -152,10 +156,38 @@ class King extends Piece {
 
     }
 
+    canCastle(board) {
+        let check = true;
+        let indexes = (this.color == "White") ? [56, -63] : [0, -7];
+        for (let x = 0; x < indexes.length; x++) {
+            let file = parseInt(Math.abs(indexes[x]) / 8, 10);
+            let rank = Math.abs(indexes[x]) % 8;
+            if (board.board[file][rank] != null && board.board[file][rank].timesMoved == 0) {
+                while (indexes[x] < ((x % 2 == 0) ? this.tile - 1 : -this.tile + 1)) {
+                    indexes[x]++;
+                    file = parseInt(Math.abs(indexes[x]) / 8, 10);
+                    rank = Math.abs(indexes[x]) % 8;
+                    if (board.board[file][rank] != null) {
+                        check = false;
+                    }
+                }
+                if (check) {
+                    rank = Math.abs(indexes[x]) % 8 + ((x % 2 == 0) ? -1 : + 1);
+                    this.moveLst[this.file][rank] = 2;
+                }
+            }
+        }
+        console.log(this.moveLst);
+    }
+
     moves(board) {
         super.resetMoves();
         this.increments = [0, 1, -1, 7, -7, 8, -8, 9, -9];
         super.checkMoves(board, this.increments);
+
+        if (this.timesMoved == 0) {
+            this.canCastle(board);
+        }
     }
 }
 
@@ -192,11 +224,6 @@ class Bishop extends Piece {
 
     }
 
-    showMoves(board) {
-        this.moves(board);
-        // board.changeColor();
-    }
-
     moves(board) {
         super.resetMoves();
         super.diagonalMoves(board);
@@ -228,7 +255,7 @@ class Rook extends Piece {
         super(tile, color);
         this.piece = "R";
         this.value = 5;
-        
+
     }
 
     show() {
@@ -237,14 +264,9 @@ class Rook extends Piece {
 
     }
 
-    showMoves(board) {
-        this.moves(board);
-        board.changeColor()
-    }
-
     moves(board) {
         super.resetMoves();
-        super.straightMoves(board);    
+        super.straightMoves(board);
     }
 }
 
@@ -259,5 +281,42 @@ class Pawn extends Piece {
         const pic = document.getElementById(this.color + ' Pawn');
         ctx.drawImage(pic, this.xPos - 133, this.yPos - 55, canvas.width / 2.13, canvas.height / 3.42); // x and y weird cuz canvas
 
+    }
+
+    moves(board) {
+        // this code is really sloppy but its pawns and they suck so whatever
+        super.resetMoves();
+        this.increments = [];
+        let isWhite = this.color == "White";
+
+        this.increments.push();
+        this.moveLst[this.file][this.rank] = 1;
+
+        if (this.timesMoved == 0) {
+            let newFile = this.file + ((isWhite) ? -2 : 2);
+            let check = this.file + ((isWhite) ? -1 : 1);
+            if (board.board[newFile][this.rank] == null && board.board[check][this.rank] == null) {
+                this.moveLst[newFile][this.rank] = 1;
+            }
+        }
+
+        let inFront = this.tile + ((isWhite) ? -8 : 8);
+        let file = parseInt(Math.abs(inFront) / 8, 10);
+        let rank = Math.abs(inFront) % 8;
+        if (board.board[file][rank] == null) {
+            this.moveLst[file][rank] = 1;
+        }
+        this.increments.push((isWhite) ? -7 : 7);
+        this.increments.push((isWhite) ? -9 : 9);
+        for (let x = 0; x < this.increments.length; x++) {
+            let newTile = this.tile + this.increments[x];
+            let file = parseInt(Math.abs(newTile) / 8, 10);
+            let rank = Math.abs(newTile) % 8;
+            if (board.board[file][rank] != null) {
+                if (board.board[file][rank].color != this.color) {
+                    this.moveLst[file][rank] = 1;
+                }
+            }
+        }
     }
 }
