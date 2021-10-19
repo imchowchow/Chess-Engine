@@ -162,8 +162,9 @@ class King extends Piece {
         for (let x = 0; x < indexes.length; x++) {
             let file = parseInt(Math.abs(indexes[x]) / 8, 10);
             let rank = Math.abs(indexes[x]) % 8;
+            check = true;
             if (board.board[file][rank] != null && board.board[file][rank].timesMoved == 0) {
-                while (indexes[x] < ((x % 2 == 0) ? this.tile - 1 : -this.tile + 1)) {
+                while (indexes[x] < ((x % 2 == 0) ? this.tile - 1 : -(this.tile + 1))) {
                     indexes[x]++;
                     file = parseInt(Math.abs(indexes[x]) / 8, 10);
                     rank = Math.abs(indexes[x]) % 8;
@@ -174,6 +175,8 @@ class King extends Piece {
                 if (check) {
                     rank = Math.abs(indexes[x]) % 8 + ((x % 2 == 0) ? -1 : + 1);
                     this.moveLst[this.file][rank] = 2;
+                    let rookRank = rank + ((x % 2 == 0) ? -2 : 1);
+                    this.whichRook = [this.file, rookRank];
                 }
             }
         }
@@ -316,6 +319,18 @@ class Pawn extends Piece {
                 if (board.board[file][rank].color != this.color) {
                     this.moveLst[file][rank] = 1;
                 }
+            }
+        }
+
+        for (let x = 0; x < this.moveLst[0].length; x++) {
+            if (this.moveLst[0][x] == 1) {
+                this.moveLst[0][x] = 3;
+            }
+        }
+
+        for (let x = 0; x < this.moveLst[7].length; x++) {
+            if (this.moveLst[7][x] == 1) {
+                this.moveLst[7][x] = 3;
             }
         }
     }

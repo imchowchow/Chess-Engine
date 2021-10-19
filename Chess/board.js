@@ -60,7 +60,7 @@ class Board {
         for (let file = 0; file < moveLst.length; file++) {
             for (let rank = 0; rank < moveLst[file].length; rank++) {
                 let position = this.board[file][rank];
-                if (moveLst[file][rank] == 1 || moveLst[file][rank] == 2) {
+                if (moveLst[file][rank] == 1 || moveLst[file][rank] == 2 || moveLst[file][rank] == 3) {
                     var whiteTiles = Piece.getColorTiles();
                     if (whiteTiles.includes((8 * file) + rank)) {
                         ctx.fillStyle = (test) ? 'rgba(226,157,83,255)' : 'rgba(222,185,145,255)';
@@ -77,23 +77,23 @@ class Board {
         }
     }
 
-    checkForCheck() {
-        for (let x = 0; x < this.whitePieces.length; x++) {
-            let test = this.whitePieces.concat(this.blackPieces);
-            let piece = test[x];
-            piece.moves(board);
-            for (let file = 0; file < piece.moveLst.length; file++) {
-                for (let rank = 0; rank < piece.moveLst[file].length; rank++) {
-                    if (piece.moveLst[file][rank] == 1 && this.board[file][rank] != null && piece.piece != "K") {
-                        if (this.board[file][rank].piece == "K") {
-                            alert("check!");
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-    }
+    // checkForCheck() {
+    //     for (let x = 0; x < this.whitePieces.length; x++) {
+    //         let test = this.whitePieces.concat(this.blackPieces);
+    //         let piece = test[x];
+    //         piece.moves(board);
+    //         for (let file = 0; file < piece.moveLst.length; file++) {
+    //             for (let rank = 0; rank < piece.moveLst[file].length; rank++) {
+    //                 if (piece.moveLst[file][rank] == 1 && this.board[file][rank] != null && piece.piece != "K") {
+    //                     if (this.board[file][rank].piece == "K") {
+    //                         alert("check!");
+    //                         return true;
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     clickPiece(xPos, yPos, isWhite) {
         var color = (isWhite) ? "White" : "Black";
@@ -133,10 +133,10 @@ class Board {
                     selectedPiece.show();
                     selectedPiece.timesMoved++;
                     this.board[file][rank] = selectedPiece;
-                    this.checkForCheck(selectedPiece.color);
+                    // this.checkForCheck(selectedPiece.color);
                     return 0;
                 } else if (selectedPiece.moveLst[file][rank] == 2) {
-                    let rook = this.board[selectedPiece.file][selectedPiece.whichRook];
+                    let rook = this.board[selectedPiece.whichRook[0]][selectedPiece.whichRook[1]];
                     rook.deletePiece(rook.tile);
                     if (rook.tile == 0 || rook.tile == 56) { // im lazy if I think of something better I will fix this
                         rook.setTile(rook.tile + 3);
@@ -150,8 +150,19 @@ class Board {
                     rook.show();
                     selectedPiece.timesMoved++;
                     this.board[rook.file][rook.rank] = rook;
+                    this.board[selectedPiece.whichRook[0]][selectedPiece.whichRook[1]] = null;
                     this.board[file][rank] = selectedPiece;
-                    this.checkForCheck();
+                    // this.checkForCheck();
+                    return 0;
+                } else if (selectedPiece.moveLst[file][rank] == 3) {
+                    this.showMoves(selectedPiece.moveLst, false);
+                    selectedPiece.deletePiece(selectedPiece.tile);
+                    selectedPiece.setTile(x);
+                    selectedPiece.deletePiece(x);
+                    this.board[file][rank] = new Queen(x, selectedPiece.color);
+                    this.board[file][rank].show();
+                    this.board[file][rank].timesMoved++;
+                    // this.checkForCheck(selectedPiece.color);
                     return 0;
                 } else {
                     this.showMoves(selectedPiece.moveLst, false);
@@ -271,4 +282,3 @@ class Board {
         }
     }
 }
-
