@@ -5,7 +5,6 @@ class Piece {
         this.piece = piece;
         this.timesMoved = 0;
 
-
         this.file = parseInt(tile / 8, 10); // y
         this.rank = tile % 8; // x
         this.xPos = this.rank * tileWidth;
@@ -142,8 +141,9 @@ class King extends Piece {
     constructor(tile, color) {
         super(tile, color);
         this.piece = "K";
-        this.pic = "Assets/White King.png";
         this.value = 99;
+
+
 
         this.check = false;
         this.whichRook; // im a bad programmer idk how else to decide which rook moves in a castle
@@ -152,7 +152,7 @@ class King extends Piece {
 
     show() {
         const pic = document.getElementById(this.color + ' King');
-        ctx.drawImage(pic, this.xPos - 138, this.yPos - 68, canvas.width / 2.14, canvas.height / 3.42); // x and y weird cuz canvas
+        ctx.drawImage(pic, this.xPos - (canvas.width / 5.797), this.yPos - (canvas.height / 11.764), canvas.width / 2.14, canvas.height / 3.42); // x and y weird cuz canvas
 
     }
 
@@ -203,7 +203,7 @@ class Queen extends Piece {
 
     show() {
         const pic = document.getElementById(this.color + ' Queen');
-        ctx.drawImage(pic, this.xPos - 140, this.yPos - 62, canvas.width / 2, canvas.height / 3.42); // x and y weird cuz canvas
+        ctx.drawImage(pic, this.xPos - (canvas.width / 5.714), this.yPos - (canvas.height / 12.9), canvas.width / 2, canvas.height / 3.42); // x and y weird cuz canvas
 
     }
 
@@ -223,7 +223,7 @@ class Bishop extends Piece {
 
     show() {
         const pic = document.getElementById(this.color + ' Bishop');
-        ctx.drawImage(pic, this.xPos - 137, this.yPos - 62, canvas.width / 2.13, canvas.height / 3.42); // x and y weird cuz canvas
+        ctx.drawImage(pic, this.xPos - (canvas.width / 5.83), this.yPos - (canvas.height / 12.9), canvas.width / 2.13, canvas.height / 3.42); // x and y weird cuz canvas
 
     }
 
@@ -242,7 +242,7 @@ class Knight extends Piece {
 
     show() {
         const pic = document.getElementById(this.color + ' Knight');
-        ctx.drawImage(pic, this.xPos - 137, this.yPos - 58, canvas.width / 2.13, canvas.height / 3.42); // x and y weird cuz canvas
+        ctx.drawImage(pic, this.xPos - (canvas.width / 5.83), this.yPos - (canvas.height / 13.79), canvas.width / 2.13, canvas.height / 3.42); // x and y weird cuz canvas
 
     }
 
@@ -263,7 +263,7 @@ class Rook extends Piece {
 
     show() {
         const pic = document.getElementById(this.color + ' Rook');
-        ctx.drawImage(pic, this.xPos - 133, this.yPos - 61, canvas.width / 2.13, canvas.height / 3.42); // x and y weird cuz canvas
+        ctx.drawImage(pic, this.xPos - (canvas.width / 6), this.yPos - (canvas.height / 13.11), canvas.width / 2.13, canvas.height / 3.42); // x and y weird cuz canvas
 
     }
 
@@ -282,7 +282,7 @@ class Pawn extends Piece {
 
     show() {
         const pic = document.getElementById(this.color + ' Pawn');
-        ctx.drawImage(pic, this.xPos - 133, this.yPos - 55, canvas.width / 2.13, canvas.height / 3.42); // x and y weird cuz canvas
+        ctx.drawImage(pic, this.xPos - (canvas.width / 6), this.yPos - (canvas.height / 14.54), canvas.width / 2.13, canvas.height / 3.42); // x and y weird cuz canvas
 
     }
 

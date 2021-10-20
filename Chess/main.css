@@ -1,0 +1,34 @@
+body {
+    background-color: #21193f;
+    margin: 0;
+    padding: 0;
+}
+
+div {
+    display: grid;
+    grid-template-columns: 25% 50% 25%;
+    /* grid-template-rows: 50% 50%; */
+}
+
+#canvas {
+    border: rgb(116, 116, 116) 25px solid;
+    /* margin-left: 485px; */
+    margin-top: 50px;
+    grid-column-start: 2;
+    grid-column-end: 2;
+    /* grid-row-start: 1;
+    grid-row-end: 3; */
+    
+    /* justify-self: center;
+    align-self: center; */
+    place-self: center;
+}
+
+#whiteGame {
+    background-color: white;
+    color: black;
+    width: 150px;
+    height: 50px;
+    font-size: 25px;
+    /* margin-left: 50px; */
+}
