@@ -56,25 +56,46 @@ class Board {
         ctx.fillRect(piece.xPos, piece.yPos, tileWidth, tileHeight);
     }
 
-    showMoves(moveLst, test) {
-        for (let file = 0; file < moveLst.length; file++) {
-            for (let rank = 0; rank < moveLst[file].length; rank++) {
-                let position = this.board[file][rank];
-                if (moveLst[file][rank] == 1 || moveLst[file][rank] == 2 || moveLst[file][rank] == 3) {
-                    var whiteTiles = Piece.getColorTiles();
-                    if (whiteTiles.includes((8 * file) + rank)) {
-                        ctx.fillStyle = (test) ? 'rgba(226,157,83,255)' : 'rgba(222,185,145,255)';
-                    }
-                    else {
-                        ctx.fillStyle = (test) ? "rgba(183,64,9,255)" : "rgba(138,73,42,255)";
-                    }
-                    ctx.fillRect(this.getXPositions(file, rank)[0], this.getYPositions(file, rank)[0], tileWidth, tileHeight);
-                    if (position != null) {
-                        position.show();
-                    }
-                }
+    showMoves(moveLst, isWhite) {
+        for (let x = 0; x < moveLst.length; x++) {
+            var whiteTiles = Piece.getColorTiles();
+            var file = parseInt(moveLst[x] / 8, 10); // y
+            var rank = moveLst[x] % 8; // x
+            if (whiteTiles.includes((8 * file) + rank)) {
+                ctx.fillStyle = (isWhite) ? 'rgba(226,157,83,255)' : 'rgba(222,185,145,255)';
+            }
+            else {
+                ctx.fillStyle = (isWhite) ? "rgba(183,64,9,255)" : "rgba(138,73,42,255)";
+            }
+            ctx.fillRect(this.getXPositions(file, rank)[0], this.getYPositions(file, rank)[0], tileWidth, tileHeight);
+
+            let position = this.board[file][rank];
+
+            if (position != null) {
+                position.show();
             }
         }
+
+        // for (let file = 0; file < moveLst.length; file++) {
+        //     for (let rank = 0; rank < moveLst[file].length; rank++) {
+        //         if (moveLst[file][rank] == 1 || moveLst[file][rank] == 2 || moveLst[file][rank] == 3) {
+        //             var whiteTiles = Piece.getColorTiles();
+        //             if (whiteTiles.includes((8 * file) + rank)) {
+        //                 ctx.fillStyle = (isWhite) ? 'rgba(226,157,83,255)' : 'rgba(222,185,145,255)';
+        //             }
+        //             else {
+        //                 ctx.fillStyle = (isWhite) ? "rgba(183,64,9,255)" : "rgba(138,73,42,255)";
+        //             }
+        //             ctx.fillRect(this.getXPositions(file, rank)[0], this.getYPositions(file, rank)[0], tileWidth, tileHeight);
+
+        //             let position = this.board[file][rank];
+
+        //             if (position != null) {
+        //                 position.show();
+        //             }
+        //         }
+        //     }
+        // }
     }
 
     // checkForCheck() {
@@ -104,6 +125,7 @@ class Board {
                 if (this.getXPositions(file, rank).includes(xPos) && this.getYPositions(file, rank).includes(yPos) && this.board[file][rank].color == color) {
                     var piece = this.board[file][rank];
                     piece.moves(this);
+                    // console.log(piece.moveLst);
                     this.showMoves(piece.moveLst, true);
                     this.changeColor(x, piece);
                     piece.show();
@@ -116,73 +138,114 @@ class Board {
     }
 
     movePiece(selectedPiece, xPos, yPos) {
-        for (let x = 0; x < 64; x++) {
-            var file = parseInt(x / 8, 10);
-            var rank = x % 8;
-            if ((this.getXPositions(file, rank).includes(xPos) && this.getYPositions(file, rank).includes(yPos))) {
-                if (selectedPiece.moveLst[file][rank] == 1) {
-                    this.showMoves(selectedPiece.moveLst, false);
-                    selectedPiece.deletePiece(selectedPiece.tile);
-                    if (selectedPiece.tile == x) {
-                        this.board[file][rank] = selectedPiece;
-                        selectedPiece.show();
-                        return 1;
-                    }
-                    selectedPiece.setTile(x);
-                    selectedPiece.deletePiece(x);
-                    selectedPiece.show();
-                    selectedPiece.timesMoved++;
+        for (let x = 0; x < selectedPiece.moveLst.length; x++) {
+            var newTile = selectedPiece.moveLst[x];
+            var file = parseInt(newTile / 8, 10);
+            var rank = newTile % 8;
+            if (this.getXPositions(file, rank).includes(xPos) && this.getYPositions(file, rank).includes(yPos)) {
+                this.showMoves(selectedPiece.moveLst, false);
+                selectedPiece.deletePiece(selectedPiece.tile);
+                if (selectedPiece.tile == newTile) {
                     this.board[file][rank] = selectedPiece;
-                    // this.checkForCheck(selectedPiece.color);
-                    return 0;
-                } else if (selectedPiece.moveLst[file][rank] == 2) {
-                    let rook = this.board[selectedPiece.whichRook[0]][selectedPiece.whichRook[1]];
-                    rook.deletePiece(rook.tile);
-                    if (rook.tile == 0 || rook.tile == 56) { // im lazy if I think of something better I will fix this
-                        rook.setTile(rook.tile + 3);
-                    } else {
-                        rook.setTile(rook.tile - 2);
-                    }
-                    this.showMoves(selectedPiece.moveLst, false);
-                    selectedPiece.deletePiece(selectedPiece.tile);
-                    selectedPiece.setTile(x);
                     selectedPiece.show();
-                    rook.show();
-                    selectedPiece.timesMoved++;
-                    this.board[rook.file][rook.rank] = rook;
-                    this.board[selectedPiece.whichRook[0]][selectedPiece.whichRook[1]] = null;
-                    this.board[file][rank] = selectedPiece;
-                    // this.checkForCheck();
-                    return 0;
-                } else if (selectedPiece.moveLst[file][rank] == 3) {
-                    this.showMoves(selectedPiece.moveLst, false);
-                    selectedPiece.deletePiece(selectedPiece.tile);
-                    selectedPiece.setTile(x);
-                    selectedPiece.deletePiece(x);
-                    this.board[file][rank] = new Queen(x, selectedPiece.color);
-                    this.board[file][rank].show();
-                    this.board[file][rank].timesMoved++;
-                    // this.checkForCheck(selectedPiece.color);
-                    return 0;
-                } else {
+                    return 1;
+                }
+                selectedPiece.setTile(newTile);
+                selectedPiece.deletePiece(newTile);
+                selectedPiece.show();
+                selectedPiece.timesMoved++;
+                this.board[file][rank] = selectedPiece;
+                // this.checkForCheck(selectedPiece.color);
+                return 0;
+            } else {
+                file = parseInt(yPos / tileHeight);
+                rank = parseInt(xPos / tileWidth);
+                if (this.board[file][rank] != null && this.board[file][rank].color == selectedPiece.color) {
                     this.showMoves(selectedPiece.moveLst, false);
                     this.board[selectedPiece.file][selectedPiece.rank] = selectedPiece;
                     selectedPiece.show();
-                    if (this.board[file][rank] == null) {
-                        return 1;
-                    }
-                    else if (this.board[file][rank].color == selectedPiece.color) {
-                        var piece = this.board[file][rank];
-                        piece.moves(this);
-                        this.showMoves(piece.moveLst, true);
-                        this.changeColor(x, piece);
-                        piece.show();
-                        this.board[file][rank] = null;
-                        return piece;
-                    }
+                    var piece = this.board[file][rank];
+                    piece.moves(this);
+                    this.showMoves(piece.moveLst, true);
+                    this.changeColor((file * 8) + rank, piece);
+                    piece.show();
+                    this.board[file][rank] = null;
+                    return piece;
                 }
             }
         }
+        this.showMoves(selectedPiece.moveLst, false);
+        this.board[selectedPiece.file][selectedPiece.rank] = selectedPiece;
+        selectedPiece.show();
+        return 1;
+
+        // for (let x = 0; x < 64; x++) {
+        //     var file = parseInt(x / 8, 10);
+        //     var rank = x % 8;
+        //     if ((this.getXPositions(file, rank).includes(xPos) && this.getYPositions(file, rank).includes(yPos))) {
+        //         if (selectedPiece.moveLst[file][rank] == 1) {
+        //             this.showMoves(selectedPiece.moveLst, false);
+        //             selectedPiece.deletePiece(selectedPiece.tile);
+        //             if (selectedPiece.tile == x) {
+        //                 this.board[file][rank] = selectedPiece;
+        //                 selectedPiece.show();
+        //                 return 1;
+        //             }
+        //             selectedPiece.setTile(x);
+        //             selectedPiece.deletePiece(x);
+        //             selectedPiece.show();
+        //             selectedPiece.timesMoved++;
+        //             this.board[file][rank] = selectedPiece;
+        //             // this.checkForCheck(selectedPiece.color);
+        //             return 0;
+        //         } else if (selectedPiece.moveLst[file][rank] == 2) {
+        //             let rook = this.board[selectedPiece.whichRook[0]][selectedPiece.whichRook[1]];
+        //             rook.deletePiece(rook.tile);
+        //             if (rook.tile == 0 || rook.tile == 56) { // im lazy if I think of something better I will fix this
+        //                 rook.setTile(rook.tile + 3);
+        //             } else {
+        //                 rook.setTile(rook.tile - 2);
+        //             }
+        //             this.showMoves(selectedPiece.moveLst, false);
+        //             selectedPiece.deletePiece(selectedPiece.tile);
+        //             selectedPiece.setTile(x);
+        //             selectedPiece.show();
+        //             rook.show();
+        //             selectedPiece.timesMoved++;
+        //             this.board[rook.file][rook.rank] = rook;
+        //             this.board[selectedPiece.whichRook[0]][selectedPiece.whichRook[1]] = null;
+        //             this.board[file][rank] = selectedPiece;
+        //             // this.checkForCheck();
+        //             return 0;
+        //         } else if (selectedPiece.moveLst[file][rank] == 3) {
+        //             this.showMoves(selectedPiece.moveLst, false);
+        //             selectedPiece.deletePiece(selectedPiece.tile);
+        //             selectedPiece.setTile(x);
+        //             selectedPiece.deletePiece(x);
+        //             this.board[file][rank] = new Queen(x, selectedPiece.color);
+        //             this.board[file][rank].show();
+        //             this.board[file][rank].timesMoved++;
+        //             // this.checkForCheck(selectedPiece.color);
+        //             return 0;
+        //         } else {
+        //             this.showMoves(selectedPiece.moveLst, false);
+        //             this.board[selectedPiece.file][selectedPiece.rank] = selectedPiece;
+        //             selectedPiece.show();
+        //             if (this.board[file][rank] == null) {
+        //                 return 1;
+        //             }
+        //             else if (this.board[file][rank].color == selectedPiece.color) {
+        //                 var piece = this.board[file][rank];
+        //                 piece.moves(this);
+        //                 this.showMoves(piece.moveLst, true);
+        //                 this.changeColor(x, piece);
+        //                 piece.show();
+        //                 this.board[file][rank] = null;
+        //                 return piece;
+        //             }
+        //         }
+        //     }
+        // }
     }
 
     loadFenString(fen) {
@@ -282,3 +345,4 @@ class Board {
         }
     }
 }
+
