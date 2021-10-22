@@ -15,6 +15,9 @@ class Board {
 
         this.whitePieces = [];
         this.blackPieces = [];
+
+        this.whiteKingTile;
+        this.blackKingTile;
     }
 
     range(start, end) {
@@ -137,8 +140,8 @@ class Board {
         return null;
     }
 
-    movePiece(selectedPiece, xPos, yPos) {
-        for (let x = 0; x < selectedPiece.moveLst.length; x++) {
+    movePiece(selectedPiece, xPos, yPos) { // returning 1 means nothing moves and 0 means it works properly
+        for (let x = 0; x < selectedPiece.moveLst.length; x++) { // if object is returned its the new piece to move
             var newTile = selectedPiece.moveLst[x];
             var file = parseInt(newTile / 8, 10);
             var rank = newTile % 8;
@@ -149,7 +152,45 @@ class Board {
                     this.board[file][rank] = selectedPiece;
                     selectedPiece.show();
                     return 1;
+                } else if (selectedPiece.piece == "K") {
+                    if (Math.abs(selectedPiece.tile - newTile) == 2) {
+                        let rook = this.board[selectedPiece.whichRook[0]][selectedPiece.whichRook[1]];
+                        rook.deletePiece(rook.tile);
+                        if (rook.tile == 0 || rook.tile == 56) { // im lazy if I think of something better I will fix this
+                            rook.setTile(rook.tile + 3);
+                        } else {
+                            rook.setTile(rook.tile - 2);
+                        }
+                        // this.showMoves(selectedPiece.moveLst, false);
+                        // selectedPiece.deletePiece(selectedPiece.tile);
+                        selectedPiece.setTile(newTile);
+                        selectedPiece.show();
+                        rook.show();
+                        selectedPiece.timesMoved++;
+                        this.board[rook.file][rook.rank] = rook;
+                        this.board[selectedPiece.whichRook[0]][selectedPiece.whichRook[1]] = null;
+                        this.board[file][rank] = selectedPiece;
+                        // this.checkForCheck();
+                        return 0;
+                    }
+                    if (selectedPiece.color == "White") {
+                        this.whiteKingTile = newTile;
+                    } else {
+                        this.blackKingTile = newTile;
+                    }
+                } else if (selectedPiece.piece == "P" && (this.range(0, 7).includes(newTile) || this.range(56, 63).includes(newTile))) {
+                    // this.showMoves(selectedPiece.moveLst, false);
+                    // selectedPiece.deletePiece(selectedPiece.tile);
+                    selectedPiece.setTile(newTile);
+                    selectedPiece.deletePiece(newTile);
+                    this.board[file][rank] = new Queen(newTile, selectedPiece.color);
+                    this.board[file][rank].show();
+                    this.board[file][rank].timesMoved++;
+                    // this.checkForCheck(selectedPiece.color);
+                    return 0;
                 }
+                
+                
                 selectedPiece.setTile(newTile);
                 selectedPiece.deletePiece(newTile);
                 selectedPiece.show();
@@ -258,10 +299,12 @@ class Board {
                 if (str.toLowerCase() == 'k') {
                     if (letter == "k") {
                         let piece = new King(x, "Black");
+                        this.blackKingTile = x;
                         this.board[file][rank] = piece;
                         this.blackPieces.push(piece)
                     } else {
                         let piece = new King(x, "White");
+                        this.whiteKingTile = x;
                         this.board[file][rank] = piece;
                         this.whitePieces.push(piece)
                     }
@@ -345,4 +388,3 @@ class Board {
         }
     }
 }
-

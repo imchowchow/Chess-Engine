@@ -16,25 +16,20 @@ class Piece {
         this.moveLst = [];
     }
 
-    resetMoves() {
-        this.moveLst = [
-            [0, 0, 0, 0, 0, 0, 0, 0], // put zeros so its easier to debug
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0]
-        ];
-    }
-
     setTile(tile) {
         this.tile = tile;
         this.file = parseInt(tile / 8, 10);
         this.rank = tile % 8;
         this.xPos = this.rank * tileWidth;
         this.yPos = this.file * tileHeight;
+
+        if (this.piece = "K") {
+            if (this.color == "White") {
+                Piece.whiteKingTile = tile;
+            } else {
+                Piece.blackKingTile = tile;
+            }
+        }
     }
 
     static getColorTiles() {
@@ -116,7 +111,7 @@ class Piece {
         this.AddSlidingMoves(board, this.tile, -7, northEastEdge);
     }
 
-    checkMoves(board, lst) {
+    addMoves(board, lst) {
         for (let x = 0; x < lst.length; x++) {
             let newTile = this.tile + lst[x];
             let file = parseInt(Math.abs(newTile) / 8, 10);
@@ -138,6 +133,22 @@ class Piece {
             // }
         }
     }
+
+    // addLegalMoves(board) {
+    //     var prevTile = this.tile;
+    //     for (let x = 1; x < this.moveLst.length; x++) {
+    //         var newTile = this.moveLst[x];
+    //         board.board[this.file][this.rank] = null;
+    //         var file = parseInt(newTile / 8, 10);
+    //         var rank = newTile % 8;
+    //         board.board[file][rank] = this;
+    //         var lst = (this.color == "White") ? board.whitePieces.length : board.blackPieces.length;
+    //         for (let y = 0; y < lst; y++) {
+    //             lst[y].moves(board);
+    //             if (lst[y].moveLst))
+    //         }
+    //     }
+    // }
 }
 
 class King extends Piece {
@@ -177,7 +188,8 @@ class King extends Piece {
                 }
                 if (check) {
                     rank = Math.abs(indexes[x]) % 8 + ((x % 2 == 0) ? -1 : + 1);
-                    this.moveLst[this.file][rank] = 2;
+                    // this.moveLst[this.file][rank] = 2;
+                    this.moveLst.push((this.file * 8) + rank);
                     let rookRank = rank + ((x % 2 == 0) ? -2 : 1);
                     this.whichRook = [this.file, rookRank];
                 }
@@ -190,11 +202,11 @@ class King extends Piece {
         // super.resetMoves();
         this.moveLst = [];
         this.increments = [0, 1, -1, 7, -7, 8, -8, 9, -9];
-        super.checkMoves(board, this.increments);
+        super.addMoves(board, this.increments);
 
-        // if (this.timesMoved == 0) {
-        //     this.canCastle(board);
-        // }
+        if (this.timesMoved == 0) {
+            this.canCastle(board);
+        }
     }
 }
 
@@ -253,7 +265,7 @@ class Knight extends Piece {
     moves(board) {
         this.moveLst = [];
         this.increments = [0, 10, -10, 17, -17, 15, -15, 6, -6];
-        super.checkMoves(board, this.increments);
+        super.addMoves(board, this.increments);
     }
 }
 
@@ -280,7 +292,7 @@ class Rook extends Piece {
 class Pawn extends Piece {
     constructor(tile, color) {
         super(tile, color);
-        this.piece = "R";
+        this.piece = "P";
         this.value = 1;
     }
 
