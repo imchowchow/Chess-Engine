@@ -78,46 +78,7 @@ class Board {
                 position.show();
             }
         }
-
-        // for (let file = 0; file < moveLst.length; file++) {
-        //     for (let rank = 0; rank < moveLst[file].length; rank++) {
-        //         if (moveLst[file][rank] == 1 || moveLst[file][rank] == 2 || moveLst[file][rank] == 3) {
-        //             var whiteTiles = Piece.getColorTiles();
-        //             if (whiteTiles.includes((8 * file) + rank)) {
-        //                 ctx.fillStyle = (isWhite) ? 'rgba(226,157,83,255)' : 'rgba(222,185,145,255)';
-        //             }
-        //             else {
-        //                 ctx.fillStyle = (isWhite) ? "rgba(183,64,9,255)" : "rgba(138,73,42,255)";
-        //             }
-        //             ctx.fillRect(this.getXPositions(file, rank)[0], this.getYPositions(file, rank)[0], tileWidth, tileHeight);
-
-        //             let position = this.board[file][rank];
-
-        //             if (position != null) {
-        //                 position.show();
-        //             }
-        //         }
-        //     }
-        // }
     }
-
-    // checkForCheck() {
-    //     for (let x = 0; x < this.whitePieces.length; x++) {
-    //         let test = this.whitePieces.concat(this.blackPieces);
-    //         let piece = test[x];
-    //         piece.moves(board);
-    //         for (let file = 0; file < piece.moveLst.length; file++) {
-    //             for (let rank = 0; rank < piece.moveLst[file].length; rank++) {
-    //                 if (piece.moveLst[file][rank] == 1 && this.board[file][rank] != null && piece.piece != "K") {
-    //                     if (this.board[file][rank].piece == "K") {
-    //                         alert("check!");
-    //                         return true;
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
 
     clickPiece(xPos, yPos, isWhite) {
         var color = (isWhite) ? "White" : "Black";
@@ -128,6 +89,7 @@ class Board {
                 if (this.getXPositions(file, rank).includes(xPos) && this.getYPositions(file, rank).includes(yPos) && this.board[file][rank].color == color) {
                     var piece = this.board[file][rank];
                     piece.moves(this);
+                    piece.addLegalMoves(this);
                     // console.log(piece.moveLst);
                     this.showMoves(piece.moveLst, true);
                     this.changeColor(x, piece);
@@ -219,74 +181,6 @@ class Board {
         this.board[selectedPiece.file][selectedPiece.rank] = selectedPiece;
         selectedPiece.show();
         return 1;
-
-        // for (let x = 0; x < 64; x++) {
-        //     var file = parseInt(x / 8, 10);
-        //     var rank = x % 8;
-        //     if ((this.getXPositions(file, rank).includes(xPos) && this.getYPositions(file, rank).includes(yPos))) {
-        //         if (selectedPiece.moveLst[file][rank] == 1) {
-        //             this.showMoves(selectedPiece.moveLst, false);
-        //             selectedPiece.deletePiece(selectedPiece.tile);
-        //             if (selectedPiece.tile == x) {
-        //                 this.board[file][rank] = selectedPiece;
-        //                 selectedPiece.show();
-        //                 return 1;
-        //             }
-        //             selectedPiece.setTile(x);
-        //             selectedPiece.deletePiece(x);
-        //             selectedPiece.show();
-        //             selectedPiece.timesMoved++;
-        //             this.board[file][rank] = selectedPiece;
-        //             // this.checkForCheck(selectedPiece.color);
-        //             return 0;
-        //         } else if (selectedPiece.moveLst[file][rank] == 2) {
-        //             let rook = this.board[selectedPiece.whichRook[0]][selectedPiece.whichRook[1]];
-        //             rook.deletePiece(rook.tile);
-        //             if (rook.tile == 0 || rook.tile == 56) { // im lazy if I think of something better I will fix this
-        //                 rook.setTile(rook.tile + 3);
-        //             } else {
-        //                 rook.setTile(rook.tile - 2);
-        //             }
-        //             this.showMoves(selectedPiece.moveLst, false);
-        //             selectedPiece.deletePiece(selectedPiece.tile);
-        //             selectedPiece.setTile(x);
-        //             selectedPiece.show();
-        //             rook.show();
-        //             selectedPiece.timesMoved++;
-        //             this.board[rook.file][rook.rank] = rook;
-        //             this.board[selectedPiece.whichRook[0]][selectedPiece.whichRook[1]] = null;
-        //             this.board[file][rank] = selectedPiece;
-        //             // this.checkForCheck();
-        //             return 0;
-        //         } else if (selectedPiece.moveLst[file][rank] == 3) {
-        //             this.showMoves(selectedPiece.moveLst, false);
-        //             selectedPiece.deletePiece(selectedPiece.tile);
-        //             selectedPiece.setTile(x);
-        //             selectedPiece.deletePiece(x);
-        //             this.board[file][rank] = new Queen(x, selectedPiece.color);
-        //             this.board[file][rank].show();
-        //             this.board[file][rank].timesMoved++;
-        //             // this.checkForCheck(selectedPiece.color);
-        //             return 0;
-        //         } else {
-        //             this.showMoves(selectedPiece.moveLst, false);
-        //             this.board[selectedPiece.file][selectedPiece.rank] = selectedPiece;
-        //             selectedPiece.show();
-        //             if (this.board[file][rank] == null) {
-        //                 return 1;
-        //             }
-        //             else if (this.board[file][rank].color == selectedPiece.color) {
-        //                 var piece = this.board[file][rank];
-        //                 piece.moves(this);
-        //                 this.showMoves(piece.moveLst, true);
-        //                 this.changeColor(x, piece);
-        //                 piece.show();
-        //                 this.board[file][rank] = null;
-        //                 return piece;
-        //             }
-        //         }
-        //     }
-        // }
     }
 
     loadFenString(fen) {

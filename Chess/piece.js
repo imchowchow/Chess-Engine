@@ -23,7 +23,7 @@ class Piece {
         this.xPos = this.rank * tileWidth;
         this.yPos = this.file * tileHeight;
 
-        if (this.piece = "K") {
+        if (this.piece == "K") {
             if (this.color == "White") {
                 Piece.whiteKingTile = tile;
             } else {
@@ -80,9 +80,6 @@ class Piece {
             } else if (board.board[file][rank].color == this.color) {
                 break;
             }
-            // } else {
-            //     this.moveLst[file][rank] = 0;
-            // }
             step += Math.abs(increase);
         }
     }
@@ -126,29 +123,38 @@ class Piece {
             } else if (board.board[file][rank].color != this.color) {
                 this.moveLst.push(newTile); 
             }
-            // } else if (board.board[file][rank].color == this.color) {
-            //     continue;
-            // } else {
-            //     this.moveLst[file][rank] = 0;
-            // }
         }
     }
 
-    // addLegalMoves(board) {
-    //     var prevTile = this.tile;
-    //     for (let x = 1; x < this.moveLst.length; x++) {
-    //         var newTile = this.moveLst[x];
-    //         board.board[this.file][this.rank] = null;
-    //         var file = parseInt(newTile / 8, 10);
-    //         var rank = newTile % 8;
-    //         board.board[file][rank] = this;
-    //         var lst = (this.color == "White") ? board.whitePieces.length : board.blackPieces.length;
-    //         for (let y = 0; y < lst; y++) {
-    //             lst[y].moves(board);
-    //             if (lst[y].moveLst))
-    //         }
-    //     }
-    // }
+    addLegalMoves(board) {
+        var legalMoves = [...this.moveLst];
+        var isWhite = this.color == "White";
+        var count = 0;
+        for (let x = 1; x < this.moveLst.length; x++) {
+            var newTile = this.moveLst[x];
+            board.board[this.file][this.rank] = null;
+            var file = parseInt(newTile / 8, 10);
+            var rank = newTile % 8;
+            var prevPiece = board.board[file][rank];
+            board.board[file][rank] = this;
+            var lst = (isWhite) ? board.blackPieces : board.whitePieces;
+            for (let y = 0; y < lst.length; y++) {
+                lst[y].moves(board);
+                var kingTile = (isWhite) ?  board.whiteKingTile : board.blackKingTile;
+                if (lst[y].moveLst.includes(kingTile)) {
+                    // legalMoves = legalMoves.filter(function(value, index, arr) {
+                    //     return value != this.moveLst[x];
+                    // });
+                    delete legalMoves[x];
+
+                    // console.log(legalMoves);
+                }
+            }
+            board.board[file][rank] = prevPiece;
+            board.board[this.file][this.rank] = this;
+        }
+        this.moveLst = legalMoves;
+    }
 }
 
 class King extends Piece {
@@ -195,11 +201,10 @@ class King extends Piece {
                 }
             }
         }
-        console.log(this.moveLst);
+        // console.log(this.moveLst);
     }
 
     moves(board) {
-        // super.resetMoves();
         this.moveLst = [];
         this.increments = [0, 1, -1, 7, -7, 8, -8, 9, -9];
         super.addMoves(board, this.increments);
@@ -207,6 +212,8 @@ class King extends Piece {
         if (this.timesMoved == 0) {
             this.canCastle(board);
         }
+
+
     }
 }
 
@@ -227,6 +234,7 @@ class Queen extends Piece {
         this.moveLst = [];
         super.diagonalMoves(board);
         super.straightMoves(board);
+
     }
 }
 
@@ -246,6 +254,7 @@ class Bishop extends Piece {
     moves(board) {
         this.moveLst = [];
         super.diagonalMoves(board);
+
     }
 }
 
@@ -286,6 +295,7 @@ class Rook extends Piece {
     moves(board) {
         this.moveLst = [];
         super.straightMoves(board);
+
     }
 }
 
@@ -341,16 +351,5 @@ class Pawn extends Piece {
             }
         }
 
-        // for (let x = 0; x < this.moveLst[0].length; x++) {
-        //     if (this.moveLst[0][x] == 1) {
-        //         this.moveLst[0][x] = 3;
-        //     }
-        // }
-
-        // for (let x = 0; x < this.moveLst[7].length; x++) {
-        //     if (this.moveLst[7][x] == 1) {
-        //         this.moveLst[7][x] = 3;
-        //     }
-        // }
     }
 }
