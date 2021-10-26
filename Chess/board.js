@@ -80,6 +80,28 @@ class Board {
         }
     }
 
+    isCheckMate(isWhite) {
+        var count = 0;
+        if (isWhite) {
+            for (let x = 0; x < this.blackPieces.length; x++) {
+                this.blackPieces[x].moves(board);
+                count += this.blackPieces[x].moveLst.length;
+            }
+            if (count == this.blackPieces.length) {
+                return true;
+            }
+        } else {
+            for (let x = 0; x < this.whitePieces.length; x++) {
+                this.whitePieces[x].moves(board);
+                count += this.whitePieces[x].moveLst.length;
+            }
+            if (count == this.whitePieces.length) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     clickPiece(xPos, yPos, isWhite) {
         var color = (isWhite) ? "White" : "Black";
         for (let x = 0; x < 64; x++) {
@@ -89,7 +111,6 @@ class Board {
                 if (this.getXPositions(file, rank).includes(xPos) && this.getYPositions(file, rank).includes(yPos) && this.board[file][rank].color == color) {
                     var piece = this.board[file][rank];
                     piece.moves(this);
-                    piece.addLegalMoves(this);
                     // console.log(piece.moveLst);
                     this.showMoves(piece.moveLst, true);
                     this.changeColor(x, piece);
@@ -102,20 +123,26 @@ class Board {
         return null;
     }
 
-    movePiece(selectedPiece, xPos, yPos) { // returning 1 means nothing moves and 0 means it works properly
+    clickMove(selectedPiece, xPos, yPos) { // returning 1 means nothing moves and 0 means it works properly
         for (let x = 0; x < selectedPiece.moveLst.length; x++) { // if object is returned its the new piece to move
             var newTile = selectedPiece.moveLst[x];
             var file = parseInt(newTile / 8, 10);
             var rank = newTile % 8;
+            var isWhite = selectedPiece.color == "White";
             if (this.getXPositions(file, rank).includes(xPos) && this.getYPositions(file, rank).includes(yPos)) {
                 this.showMoves(selectedPiece.moveLst, false);
                 selectedPiece.deletePiece(selectedPiece.tile);
-                if (selectedPiece.tile == newTile) {
+                if (selectedPiece.tile == newTile) { // returns 1 cuz it clicked itself
                     this.board[file][rank] = selectedPiece;
                     selectedPiece.show();
                     return 1;
                 } else if (selectedPiece.piece == "K") {
-                    if (Math.abs(selectedPiece.tile - newTile) == 2) {
+                    if (isWhite) { // resets king tile
+                        this.whiteKingTile = newTile;
+                    } else {
+                        this.blackKingTile = newTile;
+                    }
+                    if (Math.abs(selectedPiece.tile - newTile) == 2) { // checks for castling
                         let rook = this.board[selectedPiece.whichRook[0]][selectedPiece.whichRook[1]];
                         rook.deletePiece(rook.tile);
                         if (rook.tile == 0 || rook.tile == 56) { // im lazy if I think of something better I will fix this
@@ -123,48 +150,63 @@ class Board {
                         } else {
                             rook.setTile(rook.tile - 2);
                         }
-                        // this.showMoves(selectedPiece.moveLst, false);
-                        // selectedPiece.deletePiece(selectedPiece.tile);
-                        selectedPiece.setTile(newTile);
-                        selectedPiece.show();
                         rook.show();
-                        selectedPiece.timesMoved++;
                         this.board[rook.file][rook.rank] = rook;
                         this.board[selectedPiece.whichRook[0]][selectedPiece.whichRook[1]] = null;
-                        this.board[file][rank] = selectedPiece;
-                        // this.checkForCheck();
-                        return 0;
                     }
-                    if (selectedPiece.color == "White") {
-                        this.whiteKingTile = newTile;
+                } else if (selectedPiece.piece == "P") {
+                    if (this.range(0, 7).includes(newTile) || this.range(56, 63).includes(newTile)) { // checks for promotion
+                        var pawn = selectedPiece;
+                        selectedPiece = new Queen(newTile, pawn.color);
+
+                        if (isWhite) { // needs to delete piece if promotion takes that
+                            var index = this.whitePieces.indexOf(pawn);
+                            this.whitePieces[index] = selectedPiece;
+                        } else {
+                            var index = this.blackPieces.indexOf(pawn);
+                            this.blackPieces[index] = selectedPiece;
+                        }
                     } else {
-                        this.blackKingTile = newTile;
+                        selectedPiece.movedTwice = Math.abs(selectedPiece.file - file) == 2; // checks for en passant
+                        if (Math.abs(selectedPiece.file - file) == 1 && Math.abs(selectedPiece.rank - rank) == 1 && this.board[file][rank] == null) {
+                            if (isWhite) {
+                                var piece = this.board[file + 1][rank];
+                                var index = this.blackPieces.indexOf(piece);
+                                this.blackPieces.splice(index, 1);
+                                piece.deletePiece(piece.tile);
+                                this.board[file + 1][rank] = null;
+                            } else {
+                                var piece = this.board[file - 1][rank];
+                                var index = this.whitePieces.indexOf(piece);
+                                this.whitePieces.splice(index, 1);
+                                piece.deletePiece(piece.tile);
+                                this.board[file - 1][rank] = null;
+                            }
+                        }
                     }
-                } else if (selectedPiece.piece == "P" && (this.range(0, 7).includes(newTile) || this.range(56, 63).includes(newTile))) {
-                    // this.showMoves(selectedPiece.moveLst, false);
-                    // selectedPiece.deletePiece(selectedPiece.tile);
-                    selectedPiece.setTile(newTile);
-                    selectedPiece.deletePiece(newTile);
-                    this.board[file][rank] = new Queen(newTile, selectedPiece.color);
-                    this.board[file][rank].show();
-                    this.board[file][rank].timesMoved++;
-                    // this.checkForCheck(selectedPiece.color);
-                    return 0;
                 }
-                
-                
-                selectedPiece.setTile(newTile);
-                selectedPiece.deletePiece(newTile);
-                selectedPiece.show();
-                selectedPiece.timesMoved++;
-                this.board[file][rank] = selectedPiece;
-                // this.checkForCheck(selectedPiece.color);
+
+                if (this.board[file][rank] != null) {
+                    if (this.board[file][rank].color == "White") {
+                        var index = this.whitePieces.indexOf(this.board[file][rank]);
+                        this.whitePieces.splice(index, 1)
+                    } else {
+                        var index = this.blackPieces.indexOf(this.board[file][rank]);
+                        this.blackPieces.splice(index, 1);
+                    }
+                }
+
+                this.movePiece(selectedPiece, newTile);
+
+                if (this.isCheckMate(isWhite)) {
+                    alert("Checkmate, " + selectedPiece.color + " has won!!!");
+                }
                 return 0;
             } else {
                 file = parseInt(yPos / tileHeight);
                 rank = parseInt(xPos / tileWidth);
-                if (this.board[file][rank] != null && this.board[file][rank].color == selectedPiece.color) {
-                    this.showMoves(selectedPiece.moveLst, false);
+                this.showMoves(selectedPiece.moveLst, false);
+                if (this.board[file][rank] != null && this.board[file][rank].color == selectedPiece.color) { // switches new piece to selected piece
                     this.board[selectedPiece.file][selectedPiece.rank] = selectedPiece;
                     selectedPiece.show();
                     var piece = this.board[file][rank];
@@ -177,10 +219,20 @@ class Board {
                 }
             }
         }
-        this.showMoves(selectedPiece.moveLst, false);
+        // for if click nothing
         this.board[selectedPiece.file][selectedPiece.rank] = selectedPiece;
         selectedPiece.show();
         return 1;
+    }
+
+    movePiece(piece, tile) {
+        var file = parseInt(tile / 8, 10);
+        var rank = tile % 8;
+        piece.setTile(tile);
+        piece.deletePiece(tile);
+        piece.show();
+        piece.timesMoved++;
+        this.board[file][rank] = piece;
     }
 
     loadFenString(fen) {
@@ -272,6 +324,8 @@ class Board {
     createBoard(fen) {
         this.loadFenString(fen);
         console.log(this.board);
+        console.log(board.whitePieces)
+        console.log(board.blackPieces)
 
         for (let file = 0; file < this.board.length; file++) {
             for (let rank = 0; rank < this.board[file].length; rank++) {

@@ -22,14 +22,6 @@ class Piece {
         this.rank = tile % 8;
         this.xPos = this.rank * tileWidth;
         this.yPos = this.file * tileHeight;
-
-        if (this.piece == "K") {
-            if (this.color == "White") {
-                Piece.whiteKingTile = tile;
-            } else {
-                Piece.blackKingTile = tile;
-            }
-        }
     }
 
     static getColorTiles() {
@@ -119,41 +111,57 @@ class Piece {
             if (board.board[file][rank] === this) {
                 this.moveLst.push(newTile); // this.moveLst[file][rank] = 1;
             } else if (board.board[file][rank] == null) {
-                this.moveLst.push(newTile); 
+                this.moveLst.push(newTile);
             } else if (board.board[file][rank].color != this.color) {
-                this.moveLst.push(newTile); 
+                this.moveLst.push(newTile);
             }
         }
     }
 
     addLegalMoves(board) {
-        var legalMoves = [...this.moveLst];
+        var testBoard = new Board();
+        testBoard.whiteKingTile = board.whiteKingTile;
+        testBoard.blackKingTile = board.blackKingTile;
         var isWhite = this.color == "White";
-        var count = 0;
-        for (let x = 1; x < this.moveLst.length; x++) {
+        var testForCheck = false;
+        let start = (this.piece == "K") ? 0 : 1; // just so ik if king is in check.
+        for (let x = start; x < this.moveLst.length; x++) {
+            testBoard.board = board.board.map(function (arr) {
+                return arr.slice();
+            });
+            testBoard.board[this.file][this.rank] = null;
             var newTile = this.moveLst[x];
-            board.board[this.file][this.rank] = null;
             var file = parseInt(newTile / 8, 10);
             var rank = newTile % 8;
-            var prevPiece = board.board[file][rank];
-            board.board[file][rank] = this;
+            testBoard.board[file][rank] = this;
             var lst = (isWhite) ? board.blackPieces : board.whitePieces;
-            for (let y = 0; y < lst.length; y++) {
-                lst[y].moves(board);
-                var kingTile = (isWhite) ?  board.whiteKingTile : board.blackKingTile;
-                if (lst[y].moveLst.includes(kingTile)) {
-                    // legalMoves = legalMoves.filter(function(value, index, arr) {
-                    //     return value != this.moveLst[x];
-                    // });
-                    delete legalMoves[x];
-
-                    // console.log(legalMoves);
+            var check = 0;
+            if (this.piece == "K") {
+                if (isWhite) {
+                    testBoard.whiteKingTile = newTile;
+                } else {
+                    testBoard.blackKingTile = newTile;
                 }
             }
-            board.board[file][rank] = prevPiece;
-            board.board[this.file][this.rank] = this;
+            while (check < lst.length) {
+                lst[check].pseudoMoves(testBoard);
+                var kingTile = (isWhite) ? testBoard.whiteKingTile : testBoard.blackKingTile;
+                if (lst[check].moveLst.includes(kingTile) && lst[check].tile != newTile) {
+                    if (lst[check].moveLst.includes((isWhite) ? board.whiteKingTile : board.blackKingTile)) {
+                        testForCheck = true;
+                    }
+                    delete this.moveLst[x];
+                    // delete keeps length same so the entire function can run
+                    // but it adds empty cells so I remove them below
+                    check = 99;
+                }
+                check++;
+            }
         }
-        this.moveLst = legalMoves;
+        if (this.piece == "K") {
+            this.check = testForCheck;
+        }
+        this.moveLst = this.moveLst.filter(function () { return true }); // remove empty cells from the delete thing
     }
 }
 
@@ -162,10 +170,9 @@ class King extends Piece {
         super(tile, color);
         this.piece = "K";
         this.value = 99;
-
-
-
         this.check = false;
+
+
         this.whichRook; // im a bad programmer idk how else to decide which rook moves in a castle
         // this is my fix it will just send the index of which rook is moving
     }
@@ -177,6 +184,9 @@ class King extends Piece {
     }
 
     canCastle(board) {
+        if (this.check) {
+            return false;
+        }
         let check = true;
         let indexes = (this.color == "White") ? [56, -63] : [0, -7];
         for (let x = 0; x < indexes.length; x++) {
@@ -204,16 +214,19 @@ class King extends Piece {
         // console.log(this.moveLst);
     }
 
-    moves(board) {
+    pseudoMoves(board) {
         this.moveLst = [];
-        this.increments = [0, 1, -1, 7, -7, 8, -8, 9, -9];
-        super.addMoves(board, this.increments);
+        var increments = [0, 1, -1, 7, -7, 8, -8, 9, -9];
+        super.addMoves(board, increments);
 
         if (this.timesMoved == 0) {
             this.canCastle(board);
         }
+    }
 
-
+    moves(board) {
+        this.pseudoMoves(board);
+        super.addLegalMoves(board);
     }
 }
 
@@ -230,10 +243,15 @@ class Queen extends Piece {
 
     }
 
-    moves(board) {
+    pseudoMoves(board) {
         this.moveLst = [];
         super.diagonalMoves(board);
         super.straightMoves(board);
+    }
+
+    moves(board) {
+        this.pseudoMoves(board);
+        super.addLegalMoves(board);
 
     }
 }
@@ -251,9 +269,14 @@ class Bishop extends Piece {
 
     }
 
-    moves(board) {
+    pseudoMoves(board) {
         this.moveLst = [];
         super.diagonalMoves(board);
+    }
+
+    moves(board) {
+        this.pseudoMoves(board);
+        this.addLegalMoves(board);
 
     }
 }
@@ -271,10 +294,15 @@ class Knight extends Piece {
 
     }
 
-    moves(board) {
+    pseudoMoves(board) {
         this.moveLst = [];
-        this.increments = [0, 10, -10, 17, -17, 15, -15, 6, -6];
-        super.addMoves(board, this.increments);
+        var increments = [0, 10, -10, 17, -17, 15, -15, 6, -6];
+        super.addMoves(board, increments);
+    }
+
+    moves(board) {
+        this.pseudoMoves(board);
+        super.addLegalMoves(board);
     }
 }
 
@@ -292,9 +320,14 @@ class Rook extends Piece {
 
     }
 
-    moves(board) {
+    pseudoMoves(board) {
         this.moveLst = [];
         super.straightMoves(board);
+    }
+
+    moves(board) {
+        this.pseudoMoves(board);
+        super.addLegalMoves(board);
 
     }
 }
@@ -304,6 +337,8 @@ class Pawn extends Piece {
         super(tile, color);
         this.piece = "P";
         this.value = 1;
+
+        this.movedTwice = false;
     }
 
     show() {
@@ -312,13 +347,12 @@ class Pawn extends Piece {
 
     }
 
-    moves(board) {
+    pseudoMoves(board) {
         // this code is really sloppy but its pawns and they suck so whatever
         this.moveLst = [];
-        this.increments = [];
+        var increments = [];
         let isWhite = this.color == "White";
 
-        this.increments.push();
         // this.moveLst[this.file][this.rank] = 1;
         this.moveLst.push(this.tile);
 
@@ -326,7 +360,7 @@ class Pawn extends Piece {
             let newFile = this.file + ((isWhite) ? -2 : 2);
             let check = this.file + ((isWhite) ? -1 : 1);
             if (board.board[newFile][this.rank] == null && board.board[check][this.rank] == null) {
-                this.moveLst.push((newFile * 8) + this.rank); // this.moveLst[newFile][this.rank] = 1;
+                this.moveLst.push((newFile * 8) + this.rank);
                 // I do this everywhere because it was originally structured differently and I was lazy
                 // I should change this later but for now it works
             }
@@ -336,20 +370,36 @@ class Pawn extends Piece {
         let file = parseInt(Math.abs(inFront) / 8, 10);
         let rank = Math.abs(inFront) % 8;
         if (board.board[file][rank] == null) {
-            this.moveLst.push((file * 8) + rank); // this.moveLst[file][rank] = 1;
+            this.moveLst.push((file * 8) + rank);
         }
-        this.increments.push((isWhite) ? -7 : 7);
-        this.increments.push((isWhite) ? -9 : 9);
-        for (let x = 0; x < this.increments.length; x++) {
-            let newTile = this.tile + this.increments[x];
+        increments.push((isWhite) ? -7 : 7);
+        increments.push((isWhite) ? -9 : 9);
+        for (let x = 0; x < increments.length; x++) {
+            let newTile = this.tile + increments[x];
             let file = parseInt(Math.abs(newTile) / 8, 10);
             let rank = Math.abs(newTile) % 8;
-            if (board.board[file][rank] != null) {
+            if (board.board[file][rank] != null && Math.abs(rank - this.rank) < 2) {
                 if (board.board[file][rank].color != this.color) {
-                    this.moveLst.push((file * 8) + rank);  // [file][rank] = 1;
+                    this.moveLst.push((file * 8) + rank);
                 }
             }
         }
+
+        // en passant is bad and weird and edge case therefore the code will be bad and weird
+        increments = [1, -1];
+        for (let x = 0; x < increments.length; x++) {
+            var piece = board.board[this.file][this.rank + increments[x]];
+            if (piece != null && piece.piece == "P"  && piece.color != this.color && piece.movedTwice) {
+                file = this.file + ((isWhite) ? -1 : 1);
+                rank = piece.rank;
+                this.moveLst.push((file * 8) + rank);
+            }
+        }
+    }
+
+    moves(board) {
+        this.pseudoMoves(board);
+        super.addLegalMoves(board);
 
     }
 }
