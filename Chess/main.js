@@ -2,7 +2,7 @@ drawBoard();
 
 var isWhite = true;
 let board = new Board();
-var playing = true;
+var playing = false;
 
 // board.createBoard("Q7/3K4/8/4q3/8/5k");
 // board.createBoard("7k/3N2qp/b5r1/2p1Q1N1/Pp4PK/7P/1P3p2/6r1");
@@ -46,13 +46,18 @@ $(document).ready(function () {
         // console.log("Mouse pos: " + xPos + ", " + yPos);
         // computer.chooseMove();
         // computer2.chooseMove();
+        var startTime = performance.now();
+        var depth = 2;
+        var numPositions = computer.moveGenerationTest(depth, isWhite);
+        var endTime = performance.now();
+        console.log("Depth: " + depth + " Positions: " + numPositions + " Time : " + Math.round(endTime- startTime) + " milliseconds");
         if (playing) {
             if (selectedPiece != null) {
                 let idk = board.clickMove(selectedPiece, xPos, yPos);
                 if (idk == 0) {
                     isWhite = !isWhite;
                     selectedPiece = null;
-                    // computer.chooseMove();
+                    // computer.chooseRandomMove();
                 } else if (idk == 1) {
                     selectedPiece = null;
                 } else if (idk == 2) {
