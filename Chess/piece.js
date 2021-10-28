@@ -118,7 +118,31 @@ class Piece {
         }
     }
 
+    kingCheckMap(board) {
+        // I want to loop in all directions to see if anything is checking the king, 
+        let southEdge = ((totRows - this.file) * 8) + this.tile; 
+        let northEdge = (this.tile % (8 * this.file)) * -1;
+        let eastEdge = this.tile + (totRows - this.rank);
+        let westEdge = (this.tile - this.rank) * -1;
+        let southWestEdge = this.tile + (Math.min(this.rank, totRows - this.file) * 7)
+        let southEastEdge = this.tile + (Math.min(totRows - this.rank, totRows - this.file) * 9)
+        let northWestEdge = (this.tile - (Math.min(this.rank, this.file) * 9)) * -1;
+        let northEastEdge = (this.tile - (Math.min(totRows - this.rank, this.file) * 7)) * -1;
+    }
+
     addLegalMoves(board) {
+        var testBoard = new Board();
+        testBoard.whiteKingTile = board.whiteKingTile;
+        testBoard.blackKingTile = board.blackKingTile;
+
+        
+
+
+
+
+
+
+
         var testBoard = new Board();
         testBoard.whiteKingTile = board.whiteKingTile;
         testBoard.blackKingTile = board.blackKingTile;
@@ -162,6 +186,7 @@ class Piece {
             this.check = testForCheck;
         }
         this.moveLst = this.moveLst.filter(function () { return true }); // remove empty cells from the delete thing
+        this.moveLst = [...new Set(this.moveLst)];
     }
 }
 
@@ -276,7 +301,7 @@ class Bishop extends Piece {
 
     moves(board) {
         this.pseudoMoves(board);
-        this.addLegalMoves(board);
+        super.addLegalMoves(board);
 
     }
 }
@@ -356,14 +381,26 @@ class Pawn extends Piece {
         // this.moveLst[this.file][this.rank] = 1;
         this.moveLst.push(this.tile);
 
-        if (this.timesMoved == 0) {
-            let newFile = this.file + ((isWhite) ? -2 : 2);
-            let check = this.file + ((isWhite) ? -1 : 1);
-            if (board.board[newFile][this.rank] == null && board.board[check][this.rank] == null) {
-                this.moveLst.push((newFile * 8) + this.rank);
-                // I do this everywhere because it was originally structured differently and I was lazy
-                // I should change this later but for now it works
+        if (isWhite) {
+            if (board.range(48, 55).includes(this.tile)) {
+                let newFile = this.file - 2;
+                let check = this.file - 1;
+
+                if (board.board[newFile][this.rank] == null && board.board[check][this.rank] == null) {
+                    this.moveLst.push((newFile * 8) + this.rank);
+                    // I do this everywhere because it was originally structured differently and I was lazy
+                    // I should change this later but for now it works
+                }
             }
+        } else {
+            if (board.range(8, 15).includes(this.tile)) {
+                let newFile = this.file + 2;
+                let check = this.file + 1;
+    
+                if (board.board[newFile][this.rank] == null && board.board[check][this.rank] == null) {
+                    this.moveLst.push((newFile * 8) + this.rank);
+                }
+            }  
         }
 
         let inFront = this.tile + ((isWhite) ? -8 : 8);
@@ -389,7 +426,7 @@ class Pawn extends Piece {
         increments = [1, -1];
         for (let x = 0; x < increments.length; x++) {
             var piece = board.board[this.file][this.rank + increments[x]];
-            if (piece != null && piece.piece == "P"  && piece.color != this.color && piece.movedTwice) {
+            if (piece != null && piece.piece == "P" && piece.color != this.color && piece.movedTwice) {
                 file = this.file + ((isWhite) ? -1 : 1);
                 rank = piece.rank;
                 this.moveLst.push((file * 8) + rank);
