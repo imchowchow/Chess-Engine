@@ -171,7 +171,7 @@ class Piece {
                 lst[check].pseudoMoves(testBoard);
                 var kingTile = (isWhite) ? testBoard.whiteKingTile : testBoard.blackKingTile;
                 if (lst[check].moveLst.includes(kingTile) && lst[check].tile != newTile) {
-                    if (lst[check].moveLst.includes((isWhite) ? board.whiteKingTile : board.blackKingTile)) {
+                    if (x == 0 && lst[check].moveLst.includes((isWhite) ? board.whiteKingTile : board.blackKingTile)) {
                         testForCheck = true;
                     }
                     delete this.moveLst[x];
@@ -232,7 +232,7 @@ class King extends Piece {
                     // this.moveLst[this.file][rank] = 2;
                     this.moveLst.push((this.file * 8) + rank);
                     let rookRank = rank + ((x % 2 == 0) ? -2 : 1);
-                    this.whichRook = [this.file, rookRank];
+                    this.whichRook = board.board[this.file][rookRank];
                 }
             }
         }
@@ -260,6 +260,8 @@ class Queen extends Piece {
         super(tile, color);
         this.piece = "Q";
         this.value = 9;
+
+        this.wasPromoted = false;
     }
 
     show() {
