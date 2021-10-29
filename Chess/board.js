@@ -114,19 +114,16 @@ class Board {
 
     clickPiece(xPos, yPos, isWhite) {
         var color = (isWhite) ? "White" : "Black";
-        for (let x = 0; x < 64; x++) {
-            var file = parseInt(x / 8, 10);
-            var rank = x % 8;
-            if (this.board[file][rank] != null) {
-                if (this.getXPositions(file, rank).includes(xPos) && this.getYPositions(file, rank).includes(yPos) && this.board[file][rank].color == color) {
-                    var piece = this.board[file][rank];
-                    piece.moves(this);
-                    this.showMoves(piece.moveLst, true);
-                    this.changeColor(x, piece);
-                    piece.show();
-                    this.board[file][rank] = null;
-                    return piece;
-                }
+        var allPieces = this.whitePieces.concat(this.blackPieces);
+        for (let x = 0; x < allPieces.length; x++) {
+            var piece = allPieces[x];
+            if (piece.color == color && this.getXPositions(piece.file, piece.rank).includes(xPos) && this.getYPositions(piece.file, piece.rank).includes(yPos)) {
+                piece.moves(this);
+                this.showMoves(piece.moveLst, true);
+                this.changeColor(piece.tile, piece);
+                piece.show();
+                this.board[piece.file][piece.rank] = null;
+                return piece;
             }
         }
         return null;
@@ -166,7 +163,7 @@ class Board {
         return 1;
     }
 
-    movePiece(piece, tile) {
+    movePiece(piece, tile, needPiece = false) {
         var file = parseInt(tile / 8, 10);
         var rank = tile % 8;
         var isWhite = piece.color == "White";
@@ -182,22 +179,24 @@ class Board {
                 this.blackKingTile = tile;
             }
             if (Math.abs(piece.tile - tile) == 2) { // checks for castling
-                let rook = this.board[piece.whichRook[0]][piece.whichRook[1]];
+                let rook = piece.whichRook;
                 rook.deletePiece(rook.tile);
+                this.board[rook.file][rook.rank] = null;
                 if (rook.tile == 0 || rook.tile == 56) { // im lazy if I think of something better I will fix this
                     rook.setTile(rook.tile + 3);
                 } else {
                     rook.setTile(rook.tile - 2);
                 }
                 rook.show();
+
                 this.board[rook.file][rook.rank] = rook;
-                this.board[piece.whichRook[0]][piece.whichRook[1]] = null;
             }
+
         } else if (piece.piece == "P") {
             if (this.range(0, 7).includes(tile) || this.range(56, 63).includes(tile)) { // checks for promotion
                 var pawn = piece;
                 piece = new Queen(tile, pawn.color);
-
+                piece.wasPromoted = true;
                 if (isWhite) { // needs to delete piece if promotion takes that
                     var index = this.whitePieces.indexOf(pawn);
                     this.whitePieces[index] = piece;
@@ -241,112 +240,174 @@ class Board {
         piece.deletePiece(tile);
         piece.show();
         piece.timesMoved++;
+        var out = this.board[file][rank];
         this.board[file][rank] = piece;
 
-        
+        if (needPiece) {
+            return out;
+        }
+
+        return 0;
         // if (this.isCheckMate(isWhite)) {
         //     return 2;
         // }
     }
 
-    loadFenString(fen) {
-        let x = 0;
-        Array.from(fen).forEach((str) => {
-            if (isNaN(str)) {
-                let letter = str;
-                var file = parseInt(x / 8, 10);
-                var rank = x % 8;
-                if (str.toLowerCase() == 'k') {
-                    if (letter == "k") {
-                        let piece = new King(x, "Black");
-                        this.blackKingTile = x;
-                        this.board[file][rank] = piece;
-                        this.blackPieces.push(piece)
-                    } else {
-                        let piece = new King(x, "White");
-                        this.whiteKingTile = x;
-                        this.board[file][rank] = piece;
-                        this.whitePieces.push(piece)
-                    }
-                }
-                else if (str.toLowerCase() == 'q') {
-                    if (letter == "q") {
-                        let piece = new Queen(x, "Black");
-                        this.board[file][rank] = piece;
-                        this.blackPieces.push(piece)
-                    } else {
-                        let piece = new Queen(x, "White");
-                        this.board[file][rank] = piece;
-                        this.whitePieces.push(piece)
-                    }
-                }
-                else if (str.toLowerCase() == 'b') {
-                    if (letter == "b") {
-                        let piece = new Bishop(x, "Black");
-                        this.board[file][rank] = piece;
-                        this.blackPieces.push(piece)
-                    } else {
-                        let piece = new Bishop(x, "White");
-                        this.board[file][rank] = piece;
-                        this.whitePieces.push(piece)
-                    }
-                }
-                else if (str.toLowerCase() == 'n') {
-                    if (letter == "n") {
-                        let piece = new Knight(x, "Black");
-                        this.board[file][rank] = piece;
-                        this.blackPieces.push(piece)
-                    } else {
-                        let piece = new Knight(x, "White");
-                        this.board[file][rank] = piece;
-                        this.whitePieces.push(piece)
-                    }
-                }
-                else if (str.toLowerCase() == 'r') {
-                    if (letter == "r") {
-                        let piece = new Rook(x, "Black");
-                        this.board[file][rank] = piece;
-                        this.blackPieces.push(piece)
-                    } else {
-                        let piece = new Rook(x, "White");
-                        this.board[file][rank] = piece;
-                        this.whitePieces.push(piece)
-                    }
-                }
-                else if (str.toLowerCase() == 'p') {
-                    if (letter == "p") {
-                        let piece = new Pawn(x, "Black");
-                        this.board[file][rank] = piece;
-                        this.blackPieces.push(piece)
-                    } else {
-                        let piece = new Pawn(x, "White");
-                        this.board[file][rank] = piece;
-                        this.whitePieces.push(piece)
-                    }
-                }
-                if (str == '/') {
-                    x--;
-                }
-                x++;
+    unmakeMove(piece, tile, oldPiece = null) {
+        var file = parseInt(tile / 8, 10);
+        var rank = tile % 8;
+        var isWhite = piece.color == "White";
+        piece.deletePiece(piece.tile);
+        // if (piece.piece == "K") {
+        //     if (isWhite) { // resets king tile
+        //         this.whiteKingTile = tile;
+        //     } else {
+        //         this.blackKingTile = tile;
+        //     }
+        // }
+        // if (Math.abs(piece.tile - tile) == 2) { // undoes castling
+        //     let rook = piece.whichRook;
+        //     rook.deletePiece(rook.tile);
+        //     this.board[rook.file][rook.rank] = null;
+        //     if (rook.tile == 3 || rook.tile == 59) {
+        //         rook.setTile(rook.tile - 3);
+        //     } else {
+        //         rook.setTile(rook.tile + 2);
+        //     }
+        //     rook.show();
+        //     this.board[rook.file][rook.rank] = rook;
+        // } else if (piece.piece == "Q" && piece.timesMoved == 1 && piece.wasPromoted && (this.range(0, 7).includes(tile) || this.range(56, 63).includes(tile))) { // checks for promotion
+        //     var queen = piece;
+        //     piece = new Pawn(tile, pawn.color);
+        //     if (isWhite) { // needs to delete piece if promotion takes that
+        //         var index = this.whitePieces.indexOf(queen);
+        //         this.whitePieces[index] = piece;
+        //     } else {
+        //         var index = this.blackPieces.indexOf(queen);
+        //         this.blackPieces[index] = piece;
+        //     }
+        // }
+
+
+        this.board[piece.file][piece.rank] = oldPiece;
+        if (oldPiece != null) {
+            oldPiece.show();
+            if (oldPiece.color == "White") {
+                this.whitePieces.push(oldPiece);
+            } else {
+                this.blackPieces.push(oldPiece);
             }
-            else {
-                x += parseInt(str);
-            }
-        });
+        }
+        piece.setTile(tile);
+        piece.deletePiece(tile);
+        piece.show();
+        if (piece.timesMoved != 0) {
+        }
+        piece.timesMoved--;
+
+        this.board[file][rank] = piece;
+
+        return 0;
     }
 
-    createBoard(fen) {
-        this.loadFenString(fen);
-        console.log(this.board);
-        console.log(board.whitePieces)
-        console.log(board.blackPieces)
-
-        for (let file = 0; file < this.board.length; file++) {
-            for (let rank = 0; rank < this.board[file].length; rank++) {
-                if (this.board[file][rank] != null) {
-                    this.board[file][rank].show();
+loadFenString(fen) {
+    let x = 0;
+    Array.from(fen).forEach((str) => {
+        if (isNaN(str)) {
+            let letter = str;
+            var file = parseInt(x / 8, 10);
+            var rank = x % 8;
+            if (str.toLowerCase() == 'k') {
+                if (letter == "k") {
+                    let piece = new King(x, "Black");
+                    this.blackKingTile = x;
+                    this.board[file][rank] = piece;
+                    this.blackPieces.push(piece)
+                } else {
+                    let piece = new King(x, "White");
+                    this.whiteKingTile = x;
+                    this.board[file][rank] = piece;
+                    this.whitePieces.push(piece)
                 }
+            }
+            else if (str.toLowerCase() == 'q') {
+                if (letter == "q") {
+                    let piece = new Queen(x, "Black");
+                    this.board[file][rank] = piece;
+                    this.blackPieces.push(piece)
+                } else {
+                    let piece = new Queen(x, "White");
+                    this.board[file][rank] = piece;
+                    this.whitePieces.push(piece)
+                }
+            }
+            else if (str.toLowerCase() == 'b') {
+                if (letter == "b") {
+                    let piece = new Bishop(x, "Black");
+                    this.board[file][rank] = piece;
+                    this.blackPieces.push(piece)
+                } else {
+                    let piece = new Bishop(x, "White");
+                    this.board[file][rank] = piece;
+                    this.whitePieces.push(piece)
+                }
+            }
+            else if (str.toLowerCase() == 'n') {
+                if (letter == "n") {
+                    let piece = new Knight(x, "Black");
+                    this.board[file][rank] = piece;
+                    this.blackPieces.push(piece)
+                } else {
+                    let piece = new Knight(x, "White");
+                    this.board[file][rank] = piece;
+                    this.whitePieces.push(piece)
+                }
+            }
+            else if (str.toLowerCase() == 'r') {
+                if (letter == "r") {
+                    let piece = new Rook(x, "Black");
+                    this.board[file][rank] = piece;
+                    this.blackPieces.push(piece)
+                } else {
+                    let piece = new Rook(x, "White");
+                    this.board[file][rank] = piece;
+                    this.whitePieces.push(piece)
+                }
+            }
+            else if (str.toLowerCase() == 'p') {
+                if (letter == "p") {
+                    let piece = new Pawn(x, "Black");
+                    this.board[file][rank] = piece;
+                    this.blackPieces.push(piece)
+                } else {
+                    let piece = new Pawn(x, "White");
+                    this.board[file][rank] = piece;
+                    this.whitePieces.push(piece)
+                }
+            }
+            if (str == '/') {
+                x--;
+            }
+            x++;
+        }
+        else {
+            x += parseInt(str);
+        }
+    });
+}
+
+createBoard(fen) {
+    this.loadFenString(fen);
+    console.log(this.board);
+    console.log(board.whitePieces)
+    console.log(board.blackPieces)
+
+    for (let file = 0; file < this.board.length; file++) {
+        for (let rank = 0; rank < this.board[file].length; rank++) {
+            if (this.board[file][rank] != null) {
+                this.board[file][rank].show();
             }
         }
     }
+}
 }
