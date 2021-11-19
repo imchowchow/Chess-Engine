@@ -2,11 +2,7 @@ class AI {
     constructor(board, color) {
         this.pieces = (color == "White") ? board.whitePieces : board.blackPieces;
 
-        const pawnValue = 10;
-        const knightValue = 30;
-        const bishopValue = 30;
-        const rookValue = 50;
-        const queenValue = 90;
+        
     }
 
     chooseRandomMove() {
@@ -16,13 +12,12 @@ class AI {
             piece.moves(board);
             index = Math.floor(Math.random() * piece.moveLst.length);
             if (piece.moveLst[index] != piece.tile && piece.moveLst.length > 0) {
-                board.movePiece(board.board[piece.file][piece.rank], piece.moveLst[index]);
-                break;
+                return [board.board[piece.file][piece.rank], piece.moveLst[index]];
             }
         }
     }
 
-    evalulate (isWhite) {
+    evalulateBoard (isWhite) {
         var whiteVal = this.countMaterial(true);
         var blackVal = this.countMaterial(false);
 
@@ -33,7 +28,7 @@ class AI {
     }   
 
     countMaterial(isWhite) {
-        count = 0;
+        var count = 0;
         var pieces = (isWhite) ? board.whitePieces : board.blackPieces;
         for (var x = 0; x < pieces.length; x++) {
             switch (pieces[x].piece) {
@@ -53,15 +48,15 @@ class AI {
                     count += queenValue;
                     break;
                 default:
-                    console.log("Error at switch fsr");
                     break;
             }
         }
+        return count;
     }
     
     search(depth, color) {
         if (depth == 0) {
-            return this.evalulate(color);
+            return this.evalulateBoard(color);
         }
 
         var pieces = (color) ? board.whitePieces : board.blackPieces;
@@ -72,8 +67,48 @@ class AI {
             var piece = pieces[x];
             allMoves.concat(piece.moves(board));
         }
+        var kingTile = (color) ? board.whiteKingTile : board.blackKingTile;
+        var king = pieces.find(piece => piece.tile == kingTile)
 
-        // if ()
+        if (allMoves.length == pieces.length - 1) { 
+            if (king.check) {
+                return Number.NEGATIVE_INFINITY;
+            }
+            return 0;
+        }
+
+        var idk = this.chooseRandomMove();
+        var bestEval = [-Infinity, idk[0], idk[1]];
+        // var bestEval = -Infinity;
+        // var bestMove = [0, 1] // werid stuff incoming
+
+        for (var x = 0; x < pieces.length; x++) {
+            var piece = pieces[x];
+            piece.moves(board);
+            var oldTile = piece.tile;
+            var moves = piece.moveLst.filter(function (value) {
+                return value != oldTile;
+            });
+            for (var y = 0; y < moves.length; y++) {
+                oldTile = piece.tile;
+                var oldPiece = board.movePiece(piece, moves[y], true);
+                var evalulation = -this.search(depth - 1, !color);
+                if (evalulation > bestEval[0]) {
+                    bestEval[0] = evalulation;
+                    bestEval[1] = piece;
+                    bestEval[2] = moves[y];
+                }
+                // bestEval = Math.max(evalulation, bestEval);
+                board.unmakeMove(piece, oldTile, oldPiece);
+            }
+        }
+
+        return bestEval;
+    }
+
+    chooseMove(depth, isWhite) {
+        var moves = this.search(depth, isWhite);
+        return [moves[1], moves[2]];
     }
 
     moveGenerationTest(depth, color) {

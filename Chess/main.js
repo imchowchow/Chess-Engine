@@ -2,7 +2,14 @@ drawBoard();
 
 var isWhite = true;
 let board = new Board();
-var playing = false;
+var playing = true;
+
+const pawnValue = 10;
+const knightValue = 30;
+const bishopValue = 30;
+const rookValue = 50;
+const queenValue = 90;
+
 
 // board.createBoard("Q7/3K4/8/4q3/8/5k");
 // board.createBoard("7k/3N2qp/b5r1/2p1Q1N1/Pp4PK/7P/1P3p2/6r1");
@@ -17,7 +24,7 @@ board.createBoard(startFEN);
 $(document).ready(function () {
     var selectedPiece;
     var computer = new AI(board, "Black");
-    var computer2 = new AI(board, "White");
+    // var computer2 = new AI(board, "White");
 
     $("#canvas").mousemove(function (event) {
         var xPos = parseInt(event.pageX - xOffset);
@@ -43,21 +50,30 @@ $(document).ready(function () {
     $("#canvas").click(function (event) {
         var xPos = parseInt(event.pageX - xOffset);
         var yPos = event.pageY - yOffset;
+        var myAudio = new Audio("Assets/ChessSound.wav");
         // console.log("Mouse pos: " + xPos + ", " + yPos);
-        // computer.chooseMove();
-        // computer2.chooseMove();
-        var startTime = performance.now();
-        var depth = 2;
-        var numPositions = computer.moveGenerationTest(depth, isWhite);
-        var endTime = performance.now();
-        console.log("Depth: " + depth + " Positions: " + numPositions + " Time : " + Math.round(endTime- startTime) + " milliseconds");
+        // computer.chooseRandomMove();
+        // computer2.chooseRandomMove();
+        // var startTime = performance.now();
+        // var depth = 3;
+        // var numPositions = computer.moveGenerationTest(depth, isWhite);
+        // var eval = computer.chooseMove(depth, isWhite);
+        // var endTime = performance.now();
+        // console.log("Depth: " + depth + " Evalulation: " + eval + " Time : " + Math.round(endTime- startTime) + " milliseconds");
+
+        // console.log("Depth: " + depth + " Positions: " + numPositions + " Time : " + Math.round(endTime- startTime) + " milliseconds");
+        // console.log(`White Piece Eval: ${computer.evalulateBoard(true)} Black Piece Eval: ${computer.evalulateBoard(false)}`)
         if (playing) {
             if (selectedPiece != null) {
                 let idk = board.clickMove(selectedPiece, xPos, yPos);
                 if (idk == 0) {
-                    isWhite = !isWhite;
+                    // isWhite = !isWhite;
                     selectedPiece = null;
+                    myAudio.play();
                     // computer.chooseRandomMove();
+                    var computerMove = computer.chooseMove(3, false);
+                    // console.log(computerMove);
+                    board.movePiece(computerMove[0], computerMove[1]);
                 } else if (idk == 1) {
                     selectedPiece = null;
                 } else if (idk == 2) {
