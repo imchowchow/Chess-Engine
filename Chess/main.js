@@ -24,12 +24,12 @@ board.createBoard(startFEN);
 $(document).ready(function () {
     var selectedPiece;
     var computer = new AI(board, "Black");
-    // var computer2 = new AI(board, "White");
+    var computer2 = new AI(board, "White");
 
     $("#canvas").mousemove(function (event) {
         var xPos = parseInt(event.pageX - xOffset);
         var yPos = event.pageY - yOffset;
-        
+
         if (playing) {
             for (let x = 0; x < 63; x++) {
                 var file = parseInt(x / 8, 10);
@@ -41,7 +41,7 @@ $(document).ready(function () {
                         $("#canvas").css('cursor', 'pointer');
                     } else {
                         $("#canvas").css('cursor', 'default');
-                    } 
+                    }
                 }
             }
         }
@@ -52,8 +52,12 @@ $(document).ready(function () {
         var yPos = event.pageY - yOffset;
         var myAudio = new Audio("Assets/ChessSound.wav");
         // console.log("Mouse pos: " + xPos + ", " + yPos);
-        // computer.chooseRandomMove();
-        // computer2.chooseRandomMove();
+        // var returned1 = computer.chooseRandomMove();
+
+        // board.movePiece(returned1[0], returned1[1]);
+        // var returned2 = computer2.chooseRandomMove();
+        // board.movePiece(returned2[0], returned2[1]);
+
         // var startTime = performance.now();
         // var depth = 3;
         // var numPositions = computer.moveGenerationTest(depth, isWhite);
@@ -66,14 +70,17 @@ $(document).ready(function () {
         if (playing) {
             if (selectedPiece != null) {
                 let idk = board.clickMove(selectedPiece, xPos, yPos);
+                // setTimeout(function(){},10000);
                 if (idk == 0) {
                     // isWhite = !isWhite;
                     selectedPiece = null;
                     myAudio.play();
-                    // computer.chooseRandomMove();
-                    var computerMove = computer.chooseMove(3, false);
+                    // var returned = computer.chooseRandomMove();
+                    // board.movePiece(returned[0], returned[1]);
+                    var computerMove = computer.chooseMove(4, false);
                     // console.log(computerMove);
-                    board.movePiece(computerMove[0], computerMove[1]);
+                    console.log(`Evalulation: ${computerMove[0]}`);
+                    board.movePiece(computerMove[1], computerMove[2]);
                 } else if (idk == 1) {
                     selectedPiece = null;
                 } else if (idk == 2) {
@@ -81,7 +88,7 @@ $(document).ready(function () {
                     playing = false;
                 } else if (idk != null) {
                     selectedPiece = idk;
-                } 
+                }
             } else {
                 selectedPiece = board.clickPiece(xPos, yPos, isWhite);
             }

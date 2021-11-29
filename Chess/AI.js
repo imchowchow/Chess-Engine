@@ -2,7 +2,7 @@ class AI {
     constructor(board, color) {
         this.pieces = (color == "White") ? board.whitePieces : board.blackPieces;
 
-        
+
     }
 
     chooseRandomMove() {
@@ -17,7 +17,7 @@ class AI {
         }
     }
 
-    evalulateBoard (isWhite) {
+    evalulateBoard(isWhite) {
         var whiteVal = this.countMaterial(true);
         var blackVal = this.countMaterial(false);
 
@@ -25,7 +25,7 @@ class AI {
 
         var perspective = (isWhite) ? 1 : -1;
         return evalulation * perspective; // since white should be positive and black should be negative
-    }   
+    }
 
     countMaterial(isWhite) {
         var count = 0;
@@ -53,10 +53,10 @@ class AI {
         }
         return count;
     }
-    
-    search(depth, color) {
+
+    search(depth, color, alpha, beta) {
         if (depth == 0) {
-            return this.evalulateBoard(color);
+            return [this.evalulateBoard(color)];
         }
 
         var pieces = (color) ? board.whitePieces : board.blackPieces;
@@ -70,16 +70,18 @@ class AI {
         var kingTile = (color) ? board.whiteKingTile : board.blackKingTile;
         var king = pieces.find(piece => piece.tile == kingTile)
 
-        if (allMoves.length == pieces.length - 1) { 
+        if (allMoves.length == pieces.length - 1) {
             if (king.check) {
-                return Number.NEGATIVE_INFINITY;
+                return [-Infinity];
             }
             return 0;
         }
 
-        var idk = this.chooseRandomMove();
-        var bestEval = [-Infinity, idk[0], idk[1]];
+        // var idk = this.chooseRandomMove();
+        // var bestEval = [-Infinity, 0, 1];
         // var bestEval = -Infinity;
+        var bestPiece = 0;
+        var bestMove = 0;
         // var bestMove = [0, 1] // werid stuff incoming
 
         for (var x = 0; x < pieces.length; x++) {
@@ -91,24 +93,31 @@ class AI {
             });
             for (var y = 0; y < moves.length; y++) {
                 oldTile = piece.tile;
-                var oldPiece = board.movePiece(piece, moves[y], true);
-                var evalulation = -this.search(depth - 1, !color);
-                if (evalulation > bestEval[0]) {
-                    bestEval[0] = evalulation;
-                    bestEval[1] = piece;
-                    bestEval[2] = moves[y];
-                }
-                // bestEval = Math.max(evalulation, bestEval);
+                var returned = board.movePiece(piece, moves[y], true);
+                // returned is the piece that was taken and the piece itself incase it was promoted cuz weird stuff
+                var oldPiece = returned[0];
+                piece = returned[1];
+                var evalulation = -this.search(depth - 1, !color, -beta, -alpha)[0];
                 board.unmakeMove(piece, oldTile, oldPiece);
+
+                if (evalulation >= beta) {
+                    return [beta];
+                }
+                if (evalulation > alpha) {
+                    alpha = evalulation;
+                    bestPiece = piece;
+                    bestMove = moves[y];
+                }
+
+                // bestEval = Math.max(evalulation, bestEval);
             }
         }
 
-        return bestEval;
+        return [alpha, bestPiece, bestMove];
     }
 
     chooseMove(depth, isWhite) {
-        var moves = this.search(depth, isWhite);
-        return [moves[1], moves[2]];
+        return this.search(depth, isWhite, -Infinity, Infinity);
     }
 
     moveGenerationTest(depth, color) {
